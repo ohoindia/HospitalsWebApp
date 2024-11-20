@@ -5,7 +5,7 @@ import './input.css';
 
 const Login = () => {
     const [mobileNumber, setMobileNumber] = useState('');
-    const [cardNumber, setCardNumber] = useState();
+    const [cardNumber, setCardNumber] = useState('');
     // const [otp, setOtp] = useState();
     const [disableOtp, setDisableOtp] = useState(true);
     const [disableVerify, setDisableVerify] = useState(true);
@@ -19,6 +19,7 @@ const Login = () => {
     const [memberId, setMemberId] = useState();
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [otpLoading, setOtpLoading] = useState(false);
+    const [verifyLoading, setVerifyLoading] = useState(false);
     const inputsRef = useRef([]);
 
     const navigate = useNavigate();
@@ -122,7 +123,7 @@ const Login = () => {
                     setOtpLoading(false);
                 } else {
                     setIsRunning(false);
-                    setNumberError(otpResponse.message);
+                    setNumberError(otpResponse.msg);
                     setOtpLoading(false);
                 }
             } else {
@@ -150,7 +151,7 @@ const Login = () => {
                     setOtpLoading(false);
                 } else {
                     setIsRunning(false);
-                    setNumberError(otpResponse.message);
+                    setNumberError(otpResponse.msg);
                     setOtpLoading(false);
                 }
             } else {
@@ -164,9 +165,10 @@ const Login = () => {
         e.preventDefault();
 
         if (mobileNumber.length === 10) {
+            setVerifyLoading(true);
             const verifyResponse = await fetchData('Member/OTPValidation', {
                 mobileNumber,
-                otpGenerated: otp,
+                otpGenerated: otp.join(''),
                 guid
             });
 
@@ -174,6 +176,7 @@ const Login = () => {
                 setIsVerified(true);
                 setMemberId(verifyResponse.memberId);
                 setIsOtpSent(false);
+                setVerifyLoading(false);
 
                 navigate('/bookconsultation', {
                     replace: true,
@@ -181,11 +184,13 @@ const Login = () => {
                 });
             } else {
                 setOtpError(verifyResponse.msg);
+                setVerifyLoading(false);
             }
         } else if (cardNumber.length === 12) {
+            setVerifyLoading(true);
             const verifyResponse = await fetchData('Member/OTPValidation', {
                 cardNumber: cardNumber,
-                otpGenerated: otp,
+                otpGenerated: otp.join(''),
                 guid
             });
 
@@ -193,6 +198,7 @@ const Login = () => {
                 setIsVerified(true);
                 setMemberId(verifyResponse.memberId);
                 setIsOtpSent(false);
+                setVerifyLoading(false);
 
                 navigate('/bookconsultation', {
                     replace: true,
@@ -200,6 +206,7 @@ const Login = () => {
                 });
             } else {
                 setOtpError(verifyResponse.msg);
+                setVerifyLoading(false);
             }
         }
     };
@@ -341,8 +348,15 @@ const Login = () => {
 
                     <div className='d-flex flex-column justify-content-center'>
                         <button type="submit" className="btn btn-primary" onClick={(e) => handleVerify(e)}
-                            disabled={disableVerify} style={{ backgroundColor: '#0E94C3', minWidth: '320px' }}>
-                            Verify <i className="bi bi-chevron-right fw-bolder"></i>
+                            disabled={disableVerify} style={{ backgroundColor: '#0E94C3', minWidth: '320px' }}
+                        >
+                            {verifyLoading ? (
+                                <div className="spinner-border text-white" role="status">
+                                    {/* <span className="sr-only">Loading...</span> */}
+                                </div>
+                            ) : (<>
+                                Verify  <i className="bi bi-chevron-right fw-bolder"></i></>
+                            )}
                         </button>
                     </div>
 
@@ -365,7 +379,7 @@ const Login = () => {
             style={{ minHeight: '100vh', width: '100vw', backgroundColor: '#0E94C3' }}
         >
             {isOtpSent ? returnOtp() : (
-                <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3"
+                <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3 flex-shrink-1"
                 >
                     <div className="d-flex flex-column align-items-center mb-2">
                         <img src="/applogo.png" alt="logo"

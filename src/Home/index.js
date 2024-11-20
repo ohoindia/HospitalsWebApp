@@ -27,9 +27,9 @@ const Home = () => {
 
     const navigate = useNavigate();
     const location = useLocation();
-    // const { memberId } = location.state || {};
+    const { memberId } = location.state || {};
 
-    const memberId = 25587;
+    // const memberId = 25587;
 
     console.log("memberDetails: ", memberDetails, dependents);
     console.log('Form Data: ', formData);
@@ -318,7 +318,7 @@ const Home = () => {
 
     const returnDetails = () => {
         return (
-            <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
+            <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', width: '100vw', backgroundColor: '#0E94C3' }}>
                 <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3">
                     <Checkmark />
                     <h5 className="text-black m-2 text-center fw-bold fs-4">MEMBERSHIP VERIFICATION SUCCESS !</h5>
