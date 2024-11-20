@@ -65,7 +65,6 @@ const Home = () => {
         }
 
         fetchMemberDetails();
-        fetchPreviousAppointments();
         fetchDependents();
     }, []);
 
@@ -239,8 +238,6 @@ const Home = () => {
                 setFormSuccessMessage(responseEligible.message);
                 setEligibilityMessage('');
 
-                fetchPreviousAppointments();
-
                 setFormErrors({
                     DateAndTime: '', HospitalName: '', Branch: '', ServiceType: '', Appointment: ''
                 });
@@ -321,8 +318,8 @@ const Home = () => {
 
     const returnDetails = () => {
         return (
-            <div className="container bg-white" style={{ minHeight: '100vh', minWidth: '350px' }}>
-                <div className="d-flex flex-column justify-content-center align-items-center p-2 p-md-3">
+            <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
+                <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3">
                     <Checkmark />
                     <h5 className="text-black m-2 text-center fw-bold fs-4">MEMBERSHIP VERIFICATION SUCCESS !</h5>
 
@@ -414,6 +411,16 @@ const Home = () => {
                             </div>
 
                             <p className='text-center fw-semibold mt-3'>Need any support ?</p>
+                            <div className='d-flex flex-row mb-4' style={{fontSize: '15px'}}>
+                                <span className='me-3'>
+                                    <i class="bi bi-telephone"></i>
+                                    +91 7671 997 108
+                                </span>
+                                <span className='ms-3'>
+                                    <i class="bi bi-telephone"></i>
+                                    +91 7032 107 108
+                                </span>
+                            </div>
 
                             <div className="d-flex flex-column align-items-center mb-2">
                                 <img src="/applogo.png" alt="logo"
@@ -521,8 +528,8 @@ const Home = () => {
 
     return (
         isformOpen ? (
-            <div className="container bg-white" style={{ minHeight: '100vh', minWidth: '350px' }}>
-                <div className="d-flex flex-column justify-content-center align-items-center p-2 p-md-3" >
+            <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
+                <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3" >
                     <div className="d-flex flex-row justify-content-start align-items-center mb-3">
                         <img src="/applogo.png" alt="logo" style={{ height: '50px', width: '50px' }} />
                         <span className="app-brand-text fw-bolder ms-2" style={{ fontSize: '30px', color: 'rgb(6, 31, 92)' }} >

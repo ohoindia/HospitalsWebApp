@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './input.css';
 
 const Login = () => {
-    const [mobileNumber, setMobileNumber] = useState();
+    const [mobileNumber, setMobileNumber] = useState('');
     const [cardNumber, setCardNumber] = useState();
     // const [otp, setOtp] = useState();
     const [disableOtp, setDisableOtp] = useState(true);
@@ -23,12 +23,21 @@ const Login = () => {
 
     const navigate = useNavigate();
 
+    console.log("OTP: ", cardNumber);
+
     // Handle input change
     const handleChange = (value, index) => {
         if (!isNaN(value) && value.length <= 1) {
             const newOtp = [...otp];
             newOtp[index] = value;
+            console.log("newOtp: ", newOtp.join('').length);
             setOtp(newOtp);
+
+            if (newOtp.join('').length < 6) {
+                setDisableVerify(true);
+            } else {
+                setDisableVerify(false);
+            }
 
             // Move focus to the next input if a valid digit is entered
             if (value && index < 5) {
@@ -91,28 +100,33 @@ const Login = () => {
     }, [isRunning, timeLeft]);
 
     const handleOtpSent = async () => {
-
-        if (cardNumber.length === 12) {
+        if (cardNumber.length === 14) {
             setOtpLoading(true);
 
             const otpResponse = await fetchData('OHOCards/CardNumberorMobileNoVerification', {
                 cardNumber: cardNumber
             });
 
+            console.log("card Res: ", otpResponse, {
+                cardNumber: cardNumber
+            });
 
-            console.log("card Res: ", otpResponse);
-
-            if (otpResponse.status) {
-                setTimeLeft(120);
-                setIsRunning(true);
-                setNumberError('');
-                setIsOtpSent(true);
-                setDisableOtp(true);
-                setGuid(otpResponse.guid);
-                setOtpLoading(false);
+            if (otpResponse) {
+                if (otpResponse.status) {
+                    setTimeLeft(120);
+                    setIsRunning(true);
+                    setNumberError('');
+                    setIsOtpSent(true);
+                    setDisableOtp(true);
+                    setGuid(otpResponse.guid);
+                    setOtpLoading(false);
+                } else {
+                    setIsRunning(false);
+                    setNumberError(otpResponse.message);
+                    setOtpLoading(false);
+                }
             } else {
-                setIsRunning(false);
-                setNumberError(otpResponse.message);
+                setNumberError('Sorry, something went wrong. Please contact support team.');
                 setOtpLoading(false);
             }
         } else if (mobileNumber.length === 10) {
@@ -121,19 +135,26 @@ const Login = () => {
                 mobileNumber
             });
 
-            console.log("number Res: ", otpResponse);
+            console.log("number Res: ", otpResponse, {
+                mobileNumber
+            });
 
-            if (otpResponse.status) {
-                setTimeLeft(120);
-                setIsRunning(true);
-                setNumberError('');
-                setIsOtpSent(true);
-                setDisableOtp(true);
-                setGuid(otpResponse.guid);
-                setOtpLoading(false);
+            if (otpResponse) {
+                if (otpResponse.status) {
+                    setTimeLeft(120);
+                    setIsRunning(true);
+                    setNumberError('');
+                    setIsOtpSent(true);
+                    setDisableOtp(true);
+                    setGuid(otpResponse.guid);
+                    setOtpLoading(false);
+                } else {
+                    setIsRunning(false);
+                    setNumberError(otpResponse.message);
+                    setOtpLoading(false);
+                }
             } else {
-                setIsRunning(false);
-                setNumberError(otpResponse.message);
+                setNumberError('Sorry, something went wrong. Please contact support team.');
                 setOtpLoading(false);
             }
         }
@@ -161,9 +182,9 @@ const Login = () => {
             } else {
                 setOtpError(verifyResponse.msg);
             }
-        } else if (mobileNumber.length === 12) {
+        } else if (cardNumber.length === 12) {
             const verifyResponse = await fetchData('Member/OTPValidation', {
-                cardNumber: mobileNumber,
+                cardNumber: cardNumber,
                 otpGenerated: otp,
                 guid
             });
@@ -186,33 +207,40 @@ const Login = () => {
     const onChangeInput = (e) => {
         e.preventDefault();
 
-        if (e.target.id === 'mobileNumber') {
-            if (e.target.value.length <= 10) {
-                setMobileNumber(e.target.value);
-                setCardNumber('');
+        const { id, value } = e.target;
 
-                if (e.target.value.length >= 10 && !isRunning) {
+        if (id === "mobileNumber") {
+            if (value.length <= 10) {
+                setMobileNumber(value);
+                setCardNumber("");
+
+                if (value.length === 10 && !isRunning) {
                     setDisableOtp(false);
                 } else {
                     setDisableOtp(true);
                 }
             }
+        } else if (id === "cardNumber") {
+            if (value.length <= 14) {
+                // Format card number dynamically
+                const formattedValue = value
+                    .replace(/\s/g, "") // Remove existing spaces
+                    .match(/.{1,4}/g) // Break into chunks of 4
+                    ?.join(" ") || ""; // Add spaces and handle empty string
 
-        } else if (e.target.id = 'cardNumber') {
-            if (e.target.value.length <= 12) {
-                setCardNumber(e.target.value);
-                setMobileNumber('');
+                setCardNumber(formattedValue);
+                setMobileNumber("");
 
-                if (e.target.value.length >= 12 && !isRunning) {
+                if (formattedValue.replace(/\s/g, "").length === 12 && !isRunning) {
                     setDisableOtp(false);
                 } else {
                     setDisableOtp(true);
                 }
             }
         } else {
-            if (e.target.value.length <= 6) {
-                setOtp(e.target.value);
-                if (e.target.value.length === 6) {
+            if (value.length <= 6) {
+                setOtp(value);
+                if (value.length === 6) {
                     setDisableVerify(false);
                 } else {
                     setDisableVerify(true);
@@ -222,7 +250,7 @@ const Login = () => {
     };
 
     const returnOtp = () => (
-        <div className="d-flex flex-column justify-content-center align-items-center p-2 p-md-3" style={{ minHeight: '100vh' }} data-aos="zoom-in">
+        <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3" style={{ minHeight: '100vh' }}>
             <div className="d-flex flex-column align-items-center mb-2">
                 <img src="/applogo.png" alt="logo"
                     style={{ height: '60px', width: '60px' }}
@@ -231,79 +259,114 @@ const Login = () => {
                     style={{ fontSize: '25px', color: '#041F60' }} >OHOINDIA</span>
             </div>
 
-            <div className='d-flex flex-row justify-content-between align-items-center my-3' style={{ minWidth: '320px' }}>
-                <div>
-                    <span>OTP Sent to Mobile number</span>
-                    <h6>+91 - 9999999999</h6>
-                </div>
-                <span className='border border-1 border-success rounded-pill p-2'>36</span>
-            </div>
+            {timeLeft <= 0 ? (
+                <>
+                    <h5 className='my-3 align-self-start fw-medium'>OTP TIMED OUT</h5>
+                    <div className='d-flex flex-row justify-content-between align-items-center my-3' style={{ minWidth: '320px' }}>
+                        <div>
+                            <span>Registered Mobile number is</span>
+                            {mobileNumber && mobileNumber.length > 0 && (
+                                <h6>+91 - {mobileNumber.slice(0, 3)}XXXX{mobileNumber.slice(7, 11)}</h6>
+                            )}
+                        </div>
+                    </div>
 
-            <div className="mb-3 d-flex flex-column justify-content-start" style={{ minWidth: '320px' }}>
-                <label htmlFor="otp" className="form-label">Enter One time password (OTP)
-                    {/* <span className="text-danger">*</span> */}
-                </label>
-                {/* <input type="number" className="form-control p-0" maxLength={6} id="otp" value={otp}
-                    style={{ minHeight: '40px' }} min={0} onChange={(e) => onChangeInput(e)}
-                /> */}
+                    <div className='d-flex flex-column justify-content-center'>
+                        <button type="submit" className="btn btn-primary" onClick={(e) => handleOtpSent(e)}
+                            style={{ backgroundColor: '#0E94C3', minWidth: '320px' }}>
+                            RESEND OTP <i className="bi bi-chevron-right fw-bolder"></i>
+                        </button>
+                    </div>
 
-                <div style={{ display: "flex", gap: "14px" }} onPaste={handlePaste}>
-                    {otp.map((digit, index) => (
-                        <input
-                            key={index}
-                            type="text"
-                            maxLength="1"
-                            value={digit}
-                            onChange={(e) => handleChange(e.target.value, index)}
-                            onKeyDown={(e) => handleKeyDown(e, index)}
-                            ref={(el) => (inputsRef.current[index] = el)}
-                            style={{
-                                width: "40px",
-                                height: "40px",
-                                textAlign: "center",
-                                fontSize: "1.5rem",
-                                border: "1px solid #ccc",
-                                borderRadius: "4px",
-                            }}
+                    <div className="d-flex flex-column align-items-center mt-auto mb-2">
+                        <img src="/applogo.png" alt="logo"
+                            style={{ height: '40px', width: '40px' }}
                         />
-                    ))}
-                </div>
-            </div>
+                        <span className="app-brand-text fw-bolder"
+                            style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                        <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
+                    </div>
+                </>
+            ) : (
+                <>
+                    <div className='d-flex flex-row justify-content-between align-items-center my-3' style={{ minWidth: '320px' }}>
+                        <div>
+                            <span>OTP Sent to Mobile number</span>
+                            {mobileNumber && mobileNumber.length > 0 && (
+                                <h6>+91 - {mobileNumber.slice(0, 3)}XXXX{mobileNumber.slice(7, 11)}</h6>
+                            )}
+                        </div>
+                        <span className='border border-1 border-success rounded-pill p-2'>{timeLeft}</span>
+                    </div>
 
-            <div className='text-start mb-3'>
-                {isRunning && (
+                    <div className="mb-3 d-flex flex-column justify-content-start" style={{ minWidth: '320px' }}>
+                        <label htmlFor="otp" className="form-label">Enter One time password (OTP)
+                            {/* <span className="text-danger">*</span> */}
+                        </label>
+                        {/* <input type="number" className="form-control p-0" maxLength={6} id="otp" value={otp}
+                            style={{ minHeight: '40px' }} min={0} onChange={(e) => onChangeInput(e)}
+                        /> */}
+
+                        <div style={{ display: "flex", gap: "14px" }} onPaste={handlePaste}>
+                            {otp.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    type="text"
+                                    maxLength="1"
+                                    value={digit}
+                                    onChange={(e) => handleChange(e.target.value, index)}
+                                    onKeyDown={(e) => handleKeyDown(e, index)}
+                                    ref={(el) => (inputsRef.current[index] = el)}
+                                    style={{
+                                        width: "40px",
+                                        height: "40px",
+                                        textAlign: "center",
+                                        fontSize: "1.5rem",
+                                        border: "1px solid #ccc",
+                                        borderRadius: "4px",
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className='text-start mb-3'>
+                        {/* {isRunning && (
                     <p className='text-success'>OTP sent successfully. Resend OTP in: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</p>
-                )}
-                {otpError && otpError.length > 0 && (
-                    <p className='text-danger'>{otpError}</p>
-                )}
-            </div>
+                    )} */}
+                        {otpError && otpError.length > 0 && (
+                            <p className='text-danger'>{otpError}</p>
+                        )}
+                    </div>
 
-            <div className='d-flex flex-column justify-content-center'>
-                <button type="submit" className="btn btn-primary" onClick={(e) => handleVerify(e)}
-                    disabled={disableVerify} style={{ backgroundColor: '#0E94C3', minWidth: '320px' }}>
-                    Verify <i className="bi bi-chevron-right fw-bolder"></i>
-                </button>
-            </div>
+                    <div className='d-flex flex-column justify-content-center'>
+                        <button type="submit" className="btn btn-primary" onClick={(e) => handleVerify(e)}
+                            disabled={disableVerify} style={{ backgroundColor: '#0E94C3', minWidth: '320px' }}>
+                            Verify <i className="bi bi-chevron-right fw-bolder"></i>
+                        </button>
+                    </div>
 
-            <div className="d-flex flex-column align-items-center mt-auto mb-2">
-                <img src="/applogo.png" alt="logo"
-                    style={{ height: '40px', width: '40px' }}
-                />
-                <span className="app-brand-text fw-bolder"
-                    style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
-                <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
-            </div>
+                    <div className="d-flex flex-column align-items-center mt-auto mb-2">
+                        <img src="/applogo.png" alt="logo"
+                            style={{ height: '40px', width: '40px' }}
+                        />
+                        <span className="app-brand-text fw-bolder"
+                            style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                        <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
+                    </div>
+                </>
+            )}
         </div>
     );
 
     return (
         <div
-            className="container bg-white"
-            style={{ minHeight: '100vh', width: '100vw' }}
+            className="d-flex flex-column justify-content-start align-items-center"
+            style={{ minHeight: '100vh', width: '100vw', backgroundColor: '#0E94C3' }}
         >
             {isOtpSent ? returnOtp() : (
-                <div className="d-flex flex-column justify-content-center align-items-center p-2 p-md-3" data-aos="zoom-in">
+                <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3"
+                >
                     <div className="d-flex flex-column align-items-center mb-2">
                         <img src="/applogo.png" alt="logo"
                             style={{ height: '60px', width: '60px' }}
@@ -320,9 +383,9 @@ const Login = () => {
                                     {/* <span className="text-danger"> *</span> */}
                                 </label>
 
-                                <input type="number" className=" ps-2" maxLength="12"
+                                <input type="text" className="ps-2" maxLength="14"
                                     id="cardNumber" style={{ minHeight: '35px', minWidth: '350px' }}
-                                    placeholder='XXXX-XXXX-XXXX'
+                                    placeholder='XXXX XXXX XXXX'
                                     min={0} value={cardNumber}
                                     onChange={(e) => onChangeInput(e)}
                                 />
