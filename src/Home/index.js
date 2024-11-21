@@ -24,6 +24,10 @@ const Home = () => {
     const [isDiscountedPercentVisible, setIsDiscountedPercentVisible] = useState(false);
     const [isValid, setIsValid] = useState(false);
     const [isDataFetched, setIsDataFetched] = useState(false);
+    const [windowSize, setWindowSize] = useState({
+        width: window.innerWidth,
+        height: window.innerHeight,
+    });    
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -31,8 +35,20 @@ const Home = () => {
 
     // const memberId = 25587;
 
-    console.log("memberDetails: ", memberDetails, dependents);
-    console.log('Form Data: ', formData);
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowSize({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
+        };
+
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, []);
 
     const fetchPreviousAppointments = async () => {
         const responsePrevAppointments = await fetchAllData(`BookingConsultation/previousBookedAppointments/${memberId}`);
@@ -188,11 +204,11 @@ const Home = () => {
                     ...preVal, HospitalName: 'Please Enter valid hospital name *'
                 }))
             }
-            if (formData.Branch.length < 2) {
-                setFormErrors(preVal => ({
-                    ...preVal, Branch: 'Please Enter valid branch name *'
-                }))
-            }
+            // if (formData.Branch.length < 2) {
+            //     setFormErrors(preVal => ({
+            //         ...preVal, Branch: 'Please Enter valid branch name *'
+            //     }))
+            // }
             if (formData.ServiceType.length < 2) {
                 setFormErrors(preVal => ({
                     ...preVal, ServiceType: 'Please Enter servicetype *'
@@ -234,6 +250,8 @@ const Home = () => {
             }
             const responseEligible = await fetchData(`BookingConsultation/bookAppointment/add`, { ...payload });
 
+            console.log("Response Eligibility: ", responseEligible);
+
             if (responseEligible.status) {
                 setFormSuccessMessage(responseEligible.message);
                 setEligibilityMessage('');
@@ -252,8 +270,11 @@ const Home = () => {
                     setEligibilityMessage('');
                     setFormSuccessMessage('');
                 }, 3000);
-            } else {
+            } else if (responseEligible.message) {
                 setEligibilityMessage(responseEligible.message);
+                setFormSuccessMessage('');
+            } else {
+                setEligibilityMessage('Sorry, Your appointment haven`t booked.');
                 setFormSuccessMessage('');
             }
 
@@ -311,15 +332,24 @@ const Home = () => {
     };
 
     const goBackToLogin = () => {
-        navigate('/', {
-            replace: true,
-        });
+        const isConfirmed = window.confirm("Are you sure, You want to close?");
+        if (isConfirmed) {
+            navigate('/', {
+                replace: true,
+            });
+        }        
     };
 
     const returnDetails = () => {
         return (
-            <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', width: '100vw', backgroundColor: '#0E94C3' }}>
-                <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3">
+            <div className="d-flex flex-column justify-content-start align-items-center" 
+                style={{ minHeight: '100vh', width: '100vw', backgroundColor: '#0E94C3' }}
+            >
+                <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5"
+                    style={{minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                        minHeight: '100vh'
+                    }}
+                >
                     <Checkmark />
                     <h5 className="text-black m-2 text-center fw-bold fs-4">MEMBERSHIP VERIFICATION SUCCESS !</h5>
 
@@ -428,99 +458,10 @@ const Home = () => {
                                 />
                                 <span className="app-brand-text fw-bolder"
                                     style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                                <span className='fw-semibold mt-3' style={{color: '#0E94C3', fontSize: '13px'}}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                             </div>
                         </>
                     )}
-
-
-
-
-
-                    {/* <button type="button" className="text-primary align-self-start mb-2"
-                        style={{ backgroundColor: 'transparent', border: '1px solid', borderRadius: '5px' }}
-                        onClick={() => goBackToLogin()}
-                    >
-                        <FontAwesomeIcon icon={faArrowLeft} /> Back
-                    </button>
-
-                    <div className="card p-3 mb-4 text-start">
-                        <div className='d-flex flex-row alig-items-ceter mb-3'>
-                            <h5 className="text-secondary fw-bolder">Customers Details</h5>
-                            <button type="button" className="btn btn-success ms-3"
-                                onClick={() => bookAppointment(memberDetails, 'member')}>
-                                Book Service
-                            </button>
-                        </div>
-
-                        {memberDetails && memberDetails.length > 0 && (
-                            <div className="mb-3 row">
-                                <div className='col-12 col-md-4 d-flex flex-row'>
-                                    <strong className='me-2 fw-bold' style={{ color: '#4d4f52' }}>Name: </strong>
-                                    <p>{memberDetails[0].FullName}</p>
-                                </div>
-                                <div className='col-12 col-md-4 d-flex flex-row'>
-                                    <strong className='me-2 fw-bold' style={{ color: '#4d4f52' }}>Mobile Number: </strong>
-                                    <p>{`${memberDetails[0].MobileNumber.slice(0, 2)}XXXXXX${memberDetails[0].MobileNumber.slice(8, 10)}`}</p>
-                                </div>
-                                <div className='col-12 col-md-4 d-flex flex-row'>
-                                    <strong className='me-2 fw-bold' style={{ color: '#4d4f52' }}>Card Number: </strong>
-                                    <p>{`${memberDetails[0].OHOCardNumber.slice(0, 3)}X XXXX X${memberDetails[0].OHOCardNumber.slice(10, 13)}`}</p>
-                                </div>
-                                <div className='col-12 col-md-4 d-flex flex-row'>
-                                    <strong className='me-2 fw-bold' style={{ color: '#4d4f52' }}>Date of Birth: </strong>
-                                    <p>{formatDate(memberDetails[0].DateofBirth)}</p>
-                                </div>
-                                <div className='col-12 col-md-4 d-flex flex-row'>
-                                    <strong className='me-2 fw-bold' style={{ color: '#4d4f52' }}>Age: </strong>
-                                    <p>{calculateAge(memberDetails[0].Age)}</p>
-                                </div>
-                                <div className='col-12 col-md-4 d-flex flex-row'>
-                                    <strong className='me-2' style={{ color: '#4d4f52' }}>Gender: </strong>
-                                    <p>{memberDetails[0].Gender}</p>
-                                </div>
-                                <div className='col-12 col-md-4 d-flex flex-row'>
-                                    <strong className='me-2' style={{ color: '#4d4f52' }}>Validity: </strong>
-                                    <p>{formatDate(memberDetails[0].EndDate)}</p>
-                                </div>
-                                <div className='col-12 col-md-4 d-flex flex-row'>
-                                    <strong className='me-2' style={{ color: '#4d4f52' }}>Address: </strong>
-                                    <p>{memberDetails[0].AddressLine1}</p>
-                                </div>
-                            </div>
-                        )}
-
-                        <h5 className="mb-3 text-secondary fw-bolder">Family Details</h5>
-
-                        {dependents && dependents.length > 0 ? dependents.map(each => (
-                            <div className="mb-3" key={each.memberDependentId}>
-                                <span className="col-12 col-md-4 fw-bolder me-3" style={{ color: '#4d4f52' }}>
-                                    {each.fullName} <span className="fw-normal"> ({each.relationship})</span>
-                                </span>
-                                <button type="button" className="btn btn-success"
-                                    onClick={() => bookAppointment(each, 'dependent')}>
-                                    Book Service
-                                </button>
-                            </div>
-                        )) : <p className='text-danger ms-5'>Family details not availale</p>}
-                    </div>
-
-                    <h5 className="text-start mb-3 text-secondary fw-bolder">Your Appointments</h5>
-
-                    <div className='row m-2'>
-                        {previousAppointments && previousAppointments.length > 0 ?
-                            previousAppointments.map(each => (
-                                <div className='card col-12 col-sm-6 col-md-3 p-2 me-2'>
-                                    <h4>{each.Name}</h4>
-                                    <p>{each.HospitalName}</p>
-                                    <div className='d-flex flex-row'>
-                                        <strong>Date: </strong>
-                                        <span className='ms-1'>{formatDate(each.BookingDate)}</span>
-                                    </div>
-                                </div>
-                            )) :
-                            <p className="text-danger text-center">No Appointments exisist</p>
-                        }
-                    </div> */}
                 </div>
             </div>
         )
@@ -529,7 +470,11 @@ const Home = () => {
     return (
         isformOpen ? (
             <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
-                <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3" >
+                <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5"
+                    style={{minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                        minHeight: '100vh'
+                    }}
+                >
                     <div className="d-flex flex-row justify-content-start align-items-center mb-3">
                         <img src="/applogo.png" alt="logo" style={{ height: '50px', width: '50px' }} />
                         <span className="app-brand-text fw-bolder ms-2" style={{ fontSize: '30px', color: 'rgb(6, 31, 92)' }} >
@@ -551,73 +496,6 @@ const Home = () => {
                         <form onSubmit={(e) => handleSubmit(e)}>
                             <div className='f-flex flex-column align-items-start' style={{ minWidth: '350px' }}>
 
-                                {/*<div className="d-flex flex-column col-12 col-md-4 mb-3">*/}
-                                {/*    <label htmlFor="FullName" className="form-select-label">*/}
-                                {/*        Name<span className="text-danger"> *</span>*/}
-                                {/*    </label>*/}
-                                {/*    <select name="FullName" id="FullName" className="form-select" value={formatDate.FullName} onChange={(e) => onChangeHandler(e)}>*/}
-                                {/*        {customersList && customersList.length > 0 && customersList.map(list => (*/}
-                                {/*            <option id={list.Id} value={list.Name} key={list.Id}>{list.Name}</option>*/}
-                                {/*        ))}                                    */}
-                                {/*    </select>*/}
-                                {/*</div>*/}
-
-                                {/*<div className="d-flex flex-column col-12 col-md-4 mb-3">*/}
-                                {/*    <label htmlFor="MobileNumber" className="form-control-label">*/}
-                                {/*        Mobile Number<span className="text-danger"> *</span>*/}
-                                {/*    </label>*/}
-                                {/*    <input name="MobileNumber" id="MobileNumber" type="tel" maxLength="10" className="form-control"*/}
-                                {/*        placeholder="Enter Mobile Number" readOnly value={`${formData.MobileNumber.slice(0,4)}XXXXXX`} />*/}
-                                {/*</div>*/}
-
-                                {/*<div className="d-flex flex-column col-12 col-md-4 mb-3">*/}
-                                {/*    <label htmlFor="Cardnumber" className="form-control-label">*/}
-                                {/*        Card Number<span className="text-danger"> *</span>*/}
-                                {/*    </label>*/}
-                                {/*    <input name="Cardnumber" id="Cardnumber" className="form-control"*/}
-                                {/*        placeholder="Enter Card Number" readOnly value={`${formData.Cardnumber.slice(0, 3)}X XXXX X${formData.Cardnumber.slice(10, 13)}`}*/}
-                                {/*    />*/}
-                                {/*</div>*/}
-
-                                {/*<div className="d-flex flex-column col-12 col-md-4 mb-3">*/}
-                                {/*    <label className="form-control-label">*/}
-                                {/*        Gender<span className="text-danger"> *</span>*/}
-                                {/*    </label>*/}
-                                {/*    <div className="d-flex flex-row">*/}
-                                {/*        <div className="form-check me-3">*/}
-                                {/*            <input className="form-check-input" type="radio" name="Gender" id="Male" readOnly checked={formData.Gender === 'Male'} />*/}
-                                {/*            <label className="form-check-label" htmlFor="Male">Male</label>*/}
-                                {/*        </div>*/}
-                                {/*        <div className="form-check me-3">*/}
-                                {/*            <input className="form-check-input" type="radio" name="Gender" id="Female" readOnly checked={formData.Gender === 'Female'} />*/}
-                                {/*            <label className="form-check-label" htmlFor="Female">Felame</label>*/}
-                                {/*        </div>*/}
-                                {/*    </div>*/}
-                                {/*</div>*/}
-
-                                {/*<div className="d-flex flex-column col-12 col-md-4 mb-3">*/}
-                                {/*    <label htmlFor="flatpickr-human-friendly" className="form-control-label">*/}
-                                {/*        DateofBirth<span className="text-danger"> *</span>*/}
-                                {/*    </label>*/}
-                                {/*    <input type="text" className="form-control flatpickr-input" placeholder="Month DD, YYYY"*/}
-                                {/*        id="flatpickr-human-friendly" name="DateofBirth" disabled="" value={formData.DateofBirth} readOnly*/}
-                                {/*    />*/}
-                                {/*</div>*/}
-
-                                {/*<div className="d-flex flex-column col-12 col-md-4 mb-3">*/}
-                                {/*    <label className="form-control-label">*/}
-                                {/*        Age<span className="text-danger"> *</span>*/}
-                                {/*    </label>*/}
-                                {/*    <input type="text" name="Age" className="form-control" placeholder="Enter your age" readOnly value={formData.Age} />*/}
-                                {/*</div>*/}
-
-                                {/*<div className="d-flex flex-column col-12 col-md-4 mb-3">*/}
-                                {/*    <label className="form-control-label">*/}
-                                {/*        Address<span className="text-danger"> *</span>*/}
-                                {/*    </label>*/}
-                                {/*    <input type="text" name="Address" className="form-control" placeholder="Enter your Address" readOnly value={formData.Address} />*/}
-                                {/*</div>*/}
-
                                 <div className="d-flex flex-column mb-3">
                                     <label htmlFor="flatpickr-datetime" className="form-control-label">
                                         Consultation Date &amp; Time<span className="text-danger"> *</span>
@@ -636,7 +514,7 @@ const Home = () => {
                                             minDate: new Date()
                                         }}
                                     />
-                                    {formErrors && formErrors.DateAndTime.length > 0 && <p className='text-danger'>{formErrors.DateAndTime}</p>}
+                                    {formErrors && formErrors.DateAndTime.length > 0 && <p className='text-danger m-0'>{formErrors.DateAndTime}</p>}
                                 </div>
 
                                 <div className="d-flex flex-column mb-3">
@@ -646,16 +524,15 @@ const Home = () => {
                                     <input type="text" name="HospitalName" className="form-control" placeholder="Enter Hospital Name"
                                         value={formData.HospitalName} onChange={(e) => onChangeHandler(e)}
                                     />
-                                    {formErrors && formErrors.HospitalName.length > 0 && <p className='text-danger'>{formErrors.HospitalName}</p>}
+                                    {formErrors && formErrors.HospitalName.length > 0 && <p className='text-danger m-0'>{formErrors.HospitalName}</p>}
                                 </div>
 
                                 <div className="d-flex flex-column mb-3">
                                     <label className="form-control-label">
-                                        Branch<span className="text-danger"> *</span>
+                                        Branch
                                     </label>
                                     <input type="text" name="Branch" className="form-control" placeholder="Enter Branch Name"
                                         value={formData.Branch} onChange={(e) => onChangeHandler(e)} />
-                                    {formErrors && formErrors.Branch.length > 0 && <p className='text-danger'>{formErrors.Branch}</p>}
                                 </div>
 
                                 <div className="d-flex flex-column mb-3">
@@ -670,7 +547,7 @@ const Home = () => {
                                     </label>
                                     <input type="text" name="ServiceType" className="form-control" placeholder="Ex: Orthopedic"
                                         value={formData.ServiceType} onChange={(e) => onChangeHandler(e)} />
-                                    {formErrors && formErrors.ServiceType.length > 0 && <p className='text-danger'>{formErrors.ServiceType}</p>}
+                                    {formErrors && formErrors.ServiceType.length > 0 && <p className='text-danger m-0'>{formErrors.ServiceType}</p>}
                                 </div>
 
                                 <div className="d-flex flex-column mb-3">
@@ -699,7 +576,7 @@ const Home = () => {
                                             <label className="form-check-label" htmlFor="DiscountedInvestigation">Discounted Investigation</label>
                                         </div>
                                     </div>
-                                    {formErrors && formErrors.Appointment.length > 0 && <p className='text-danger'>{formErrors.Appointment}</p>}
+                                    {formErrors && formErrors.Appointment.length > 0 && <p className='text-danger m-0'>{formErrors.Appointment}</p>}
                                 </div>
 
                                 {isDiscountedPercentVisible && (

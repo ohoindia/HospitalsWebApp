@@ -3,18 +3,20 @@ import './App.css';
 import Login from './Login/index';
 import Home from './Home/index';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import HospitalValidation from './HospitalValidation/HospitalValidation';
 
 function App() {
-  return (
-      <Router>
-          <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="/bookconsultation" element={<Home />} />
-          </Routes>
-      </Router>
+    return (
+        <Router>
+            <Routes>
+                <Route path="/" element={<HospitalValidation />} />
+                <Route path="/verify" element={<Login />} />
+                <Route path="/bookconsultation" element={<Home />} />
+            </Routes>
+        </Router>
 
-      //<Home />
-  );
+        //<Home />
+    );
 }
 
 export default App;

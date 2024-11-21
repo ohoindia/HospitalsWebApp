@@ -20,8 +20,28 @@ const Login = () => {
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [otpLoading, setOtpLoading] = useState(false);
     const [verifyLoading, setVerifyLoading] = useState(false);
-    const [resendOtp, setResendOtp] = useState(false);
+    const [resendOtp, setResendOtp] = useState(false);    
+    const [windowSize, setWindowSize] = useState({
+        width: window.innerWidth,
+        height: window.innerHeight,
+    });
+
     const inputsRef = useRef([]);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowSize({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
+        };
+
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, []);
 
     const navigate = useNavigate();
 
@@ -66,6 +86,7 @@ const Login = () => {
     const handlePaste = (e) => {
         e.preventDefault();
         const pastedData = e.clipboardData.getData("text").slice(0, 6);
+
         if (!isNaN(pastedData)) {
             const newOtp = [...otp]; // Copy existing OTP
             pastedData.split("").forEach((char, i) => {
@@ -73,6 +94,10 @@ const Login = () => {
                     newOtp[i] = char; // Fill only the starting boxes
                 }
             });
+
+            if (pastedData.length === 6) {
+                setDisableVerify(false);
+            };
             setOtp(newOtp);
 
             // Focus on the first empty box or the last box if all are filled
@@ -278,7 +303,10 @@ const Login = () => {
     };
 
     const returnOtp = () => (
-        <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3" style={{ minHeight: '100vh' }}>
+        <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5" 
+            style={{minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                minHeight: '100vh'}}
+        >
             <div className="d-flex flex-column align-items-center mb-2">
                 <img src="/applogo.png" alt="logo"
                     style={{ height: '60px', width: '60px' }}
@@ -289,7 +317,7 @@ const Login = () => {
 
             {timeLeft <= 0 ? (
                 <>
-                    <h5 className='my-3 align-self-start fw-medium'>OTP TIMED OUT</h5>
+                    <h5 className='my-3 fw-bold'>OTP TIMED OUT</h5>
                     <div className='d-flex flex-row justify-content-between align-items-center my-3' style={{ minWidth: '320px' }}>
                         <div>
                             <span>Registered Mobile number is</span>
@@ -388,6 +416,7 @@ const Login = () => {
                         <span className="app-brand-text fw-bolder"
                             style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
+                        <span className='fw-semibold mt-3' style={{color: '#0E94C3', fontSize: '13px'}}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                     </div>
                 </>
             )}
@@ -400,9 +429,12 @@ const Login = () => {
             style={{ minHeight: '100vh', width: '100vw', backgroundColor: '#0E94C3' }}
         >
             {isOtpSent ? returnOtp() : (
-                <div className="card d-flex flex-column justify-content-center align-items-center p-2 p-md-3 flex-shrink-1"
+                <div className="card d-flex flex-column justify-content-center flex-grow-1 align-items-center p-3 pb-5"
+                    style={{minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                        minHeight: '100vh'
+                    }} 
                 >
-                    <div className="d-flex flex-column align-items-center mb-2">
+                    <div className="d-flex flex-column align-items-center mb-2 mt-5">
                         <img src="/applogo.png" alt="logo"
                             style={{ height: '60px', width: '60px' }}
                         />
@@ -458,7 +490,7 @@ const Login = () => {
                                     )}
                                 </div>
 
-                                <hr className='mt-0' />
+                                <hr className='mt-5' />
 
                                 <div className='d-flex flex-column align-items-center'>
                                     <span style={{ fontSize: '12px' }}>OHO card number shown as below</span>
@@ -476,7 +508,7 @@ const Login = () => {
                                     </div>
                                 </div>
 
-                                <hr />
+                                <hr className='mt-5' />
 
                                 <div className="d-flex flex-column align-items-center mb-2">
                                     <img src="/applogo.png" alt="logo"
@@ -485,6 +517,7 @@ const Login = () => {
                                     <span className="app-brand-text fw-bolder"
                                         style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                                     <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
+                                    <span className='fw-semibold mt-3' style={{color: '#0E94C3', fontSize: '13px'}}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                                 </div>
 
                             </div>
