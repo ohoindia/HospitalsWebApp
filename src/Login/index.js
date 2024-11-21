@@ -20,11 +20,12 @@ const Login = () => {
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [otpLoading, setOtpLoading] = useState(false);
     const [verifyLoading, setVerifyLoading] = useState(false);
-    const [resendOtp, setResendOtp] = useState(false);    
+    const [resendOtp, setResendOtp] = useState(false);
     const [windowSize, setWindowSize] = useState({
         width: window.innerWidth,
         height: window.innerHeight,
     });
+    const [isFlipped, setIsFlipped] = useState(false);
 
     const inputsRef = useRef([]);
 
@@ -303,9 +304,11 @@ const Login = () => {
     };
 
     const returnOtp = () => (
-        <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5" 
-            style={{minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
-                minHeight: '100vh'}}
+        <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5"
+            style={{
+                minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                minHeight: '100vh'
+            }}
         >
             <div className="d-flex flex-column align-items-center mb-2">
                 <img src="/applogo.png" alt="logo"
@@ -416,7 +419,7 @@ const Login = () => {
                         <span className="app-brand-text fw-bolder"
                             style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
-                        <span className='fw-semibold mt-3' style={{color: '#0E94C3', fontSize: '13px'}}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                        <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                     </div>
                 </>
             )}
@@ -430,9 +433,10 @@ const Login = () => {
         >
             {isOtpSent ? returnOtp() : (
                 <div className="card d-flex flex-column justify-content-center flex-grow-1 align-items-center p-3 pb-5"
-                    style={{minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                    style={{
+                        minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
                         minHeight: '100vh'
-                    }} 
+                    }}
                 >
                     <div className="d-flex flex-column align-items-center mb-2 mt-5">
                         <img src="/applogo.png" alt="logo"
@@ -452,7 +456,7 @@ const Login = () => {
 
                                 <input type="text" className="ps-2" maxLength="14"
                                     id="cardNumber" style={{ minHeight: '35px', minWidth: '350px' }}
-                                    placeholder='XXXX XXXX XXXX'
+                                    placeholder='Enter OHOCard Number'
                                     min={0} value={cardNumber}
                                     onChange={(e) => onChangeInput(e)}
                                 />
@@ -467,7 +471,7 @@ const Login = () => {
 
                                 <input type="number" className=" ps-2" maxLength="12"
                                     id="mobileNumber" style={{ minHeight: '35px', minWidth: '350px' }}
-                                    placeholder='XXXXXXXXXX'
+                                    placeholder='Enter Mobile Number'
                                     min={0} value={mobileNumber}
                                     onChange={(e) => onChangeInput(e)}
                                 />
@@ -493,20 +497,77 @@ const Login = () => {
                                 <hr className='mt-5' />
 
                                 <div className='d-flex flex-column align-items-center'>
+                                    <span style={{ fontSize: '14px' }}>OHO card number shown as below</span>
+                                    <div
+                                        style={{ width: "330px", height: "200px", margin: "10px",
+                                            perspective: "1000px", borderRadius: "5px",
+                                        }}
+                                        onClick={() => setIsFlipped(!isFlipped)}
+                                    >
+                                        <div
+                                            style={{ position: "relative", width: "100%", height: "100%",
+                                                textAlign: "center", transition: "transform 0.6s", transformStyle: "preserve-3d", 
+                                                transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                                                borderRadius: "8px",
+                                            }}
+                                        >
+                                            {/* Front Side */}
+                                            <div
+                                                style={{ position: "absolute", width: "100%", height: "100%",
+                                                    backfaceVisibility: "hidden", borderRadius: "10px",
+                                                    overflow: "hidden",
+                                                }}
+                                            >
+                                                <img
+                                                    src={"https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg"}
+                                                    alt="Front side"
+                                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                />
+                                                {/* Card Number Overlay */}
+                                                <p className='border border-3 border-danger'
+                                                    style={{ position: "absolute", bottom: "8px", left: "20px",
+                                                        color: "white", fontSize: "1.2rem", textShadow: "1px 1px 2px black",
+                                                        padding: "5px 10px", borderRadius: "5px",
+                                                    }}
+                                                >
+                                                    2804 XXXX XX29
+                                                </p>
+                                            </div>
+
+                                            {/* Back Side */}
+                                            <div
+                                                style={{ position: "absolute", width: "100%", height: "100%",
+                                                    backfaceVisibility: "hidden", transform: "rotateY(180deg)",
+                                                    borderRadius: "10px", overflow: "hidden"
+                                                }}
+                                            >
+                                                <img
+                                                    src={
+                                                        "https://ohoindia-mous.s3.ap-south-1.amazonaws.com/3b56a6e5-41ca-4049-a882-02a3d14e1d78.jpg"
+                                                    }
+                                                    alt="Back side"
+                                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* <div className='d-flex flex-column align-items-center'>
                                     <span style={{ fontSize: '12px' }}>OHO card number shown as below</span>
                                     <div style={{
-                                        width: '300px', height: '180px',
+                                        width: '300px', height: '180px', borderRadius: '10px',
                                         backgroundImage: 'url(https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg)',
                                         backgroundSize: 'cover'
                                     }}>
-                                        <p style={{
-                                            fontSize: '1rem', color: 'white',
-                                            textShadow: '1px 1px 2px black', marginTop: '135px', marginLeft: '30px'
+                                        <p className='border border-3 border-danger' style={{
+                                            fontSize: '1rem', color: 'white', width: '125px',
+                                            textShadow: '1px 1px 2px black', marginTop: '140px', marginLeft: '30px'
                                         }}>
                                             2804 XXXX XX29
                                         </p>
                                     </div>
-                                </div>
+                                </div> */}
 
                                 <hr className='mt-5' />
 
@@ -517,7 +578,7 @@ const Login = () => {
                                     <span className="app-brand-text fw-bolder"
                                         style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                                     <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
-                                    <span className='fw-semibold mt-3' style={{color: '#0E94C3', fontSize: '13px'}}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                                    <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                                 </div>
 
                             </div>

@@ -10,13 +10,12 @@ import '../Login/input.css';
 
 const Home = () => {
     const [memberDetails, setMemberDetails] = useState();
-    const [previousAppointments, setPreviousAppointments] = useState();
     const [dependents, setDependents] = useState();
     const [isformOpen, setIsformOpen] = useState(false);
     const [formData, setFormData] = useState({
         FullName: '', MobileNumber: '', Cardnumber: '', Gender: '', DateofBirth: '', Age: '', Address: '',
-        DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: '', Appointment: '', DiscountPercentage: '',
-        ConsultationFee: ''
+        DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: '', Appointment: '', DiscountPercentage: 0.0,
+        ConsultationFee: 0
     });
     const [formErrors, setFormErrors] = useState({ DateAndTime: '', HospitalName: '', Branch: '', ServiceType: '', Appointment: '' });
     const [eligibilityMessage, setEligibilityMessage] = useState();
@@ -27,7 +26,9 @@ const Home = () => {
     const [windowSize, setWindowSize] = useState({
         width: window.innerWidth,
         height: window.innerHeight,
-    });    
+    });
+    const [isFlipped, setIsFlipped] = useState(false);
+    const [submitLoading, setSubmitLoading] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -49,14 +50,6 @@ const Home = () => {
             window.removeEventListener("resize", handleResize);
         };
     }, []);
-
-    const fetchPreviousAppointments = async () => {
-        const responsePrevAppointments = await fetchAllData(`BookingConsultation/previousBookedAppointments/${memberId}`);
-
-        if (responsePrevAppointments.status) {
-            setPreviousAppointments(responsePrevAppointments.data);
-        }
-    };
 
     useEffect(() => {
         const fetchMemberDetails = async () => {
@@ -191,7 +184,7 @@ const Home = () => {
     };
 
     const checkErrors = () => {
-        if (formData.DateAndTime === '' || formData.HospitalName.length < 2 || formData.Branch.length < 2 ||
+        if (formData.DateAndTime === '' || formData.HospitalName.length < 2 ||
             formData.ServiceType.length < 2 || formData.Appointment === '') {
 
             if (formData.DateAndTime === '') {
@@ -248,13 +241,17 @@ const Home = () => {
                 discountinPercentage: formData.DiscountPercentage,
                 appointment: formData.Appointment
             }
+
+            setSubmitLoading(true);
+
             const responseEligible = await fetchData(`BookingConsultation/bookAppointment/add`, { ...payload });
 
-            console.log("Response Eligibility: ", responseEligible);
+            console.log("Response Eligibility: ", responseEligible, { ...payload });
 
             if (responseEligible.status) {
                 setFormSuccessMessage(responseEligible.message);
                 setEligibilityMessage('');
+                setSubmitLoading(false);
 
                 setFormErrors({
                     DateAndTime: '', HospitalName: '', Branch: '', ServiceType: '', Appointment: ''
@@ -263,7 +260,7 @@ const Home = () => {
                 setTimeout(() => {
                     setFormData(preVal => ({
                         ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: '', Appointment: '',
-                        DiscountPercentage: '', ConsultationFee: ''
+                        DiscountPercentage: 0.0, ConsultationFee: 0
                     }));
 
                     setIsformOpen(false);
@@ -273,9 +270,11 @@ const Home = () => {
             } else if (responseEligible.message) {
                 setEligibilityMessage(responseEligible.message);
                 setFormSuccessMessage('');
+                setSubmitLoading(false);
             } else {
                 setEligibilityMessage('Sorry, Your appointment haven`t booked.');
                 setFormSuccessMessage('');
+                setSubmitLoading(false);
             }
 
         } else {
@@ -289,7 +288,7 @@ const Home = () => {
 
         setFormData(preVal => ({
             ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: '', Appointment: '',
-            DiscountPercentage: '', ConsultationFee: ''
+            DiscountPercentage: 0.0, ConsultationFee: 0
         }));
 
         setFormErrors({
@@ -300,7 +299,7 @@ const Home = () => {
     const handleCancel = () => {
         setFormData(preVal => ({
             ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: '', Appointment: '',
-            DiscountPercentage: '', ConsultationFee: ''
+            DiscountPercentage: 0.0, ConsultationFee: 0
         }));
         setFormErrors('');
         setIsformOpen(false);
@@ -337,25 +336,26 @@ const Home = () => {
             navigate('/', {
                 replace: true,
             });
-        }        
+        }
     };
 
     const returnDetails = () => {
         return (
-            <div className="d-flex flex-column justify-content-start align-items-center" 
+            <div className="d-flex flex-column justify-content-start align-items-center"
                 style={{ minHeight: '100vh', width: '100vw', backgroundColor: '#0E94C3' }}
             >
                 <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5"
-                    style={{minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                    style={{
+                        minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
                         minHeight: '100vh'
                     }}
                 >
-                    <Checkmark />
-                    <h5 className="text-black m-2 text-center fw-bold fs-4">MEMBERSHIP VERIFICATION SUCCESS !</h5>
+                    <Checkmark size='medium' />
+                    <h5 className="text-black m-2 text-center fw-bold fs-5">MEMBERSHIP VERIFICATION SUCCESS !</h5>
 
                     {isDataFetched && (
                         <>
-                            <div className='d-flex flex-column p-2 my-3' style={{ backgroundColor: '#e8ebe9', minWidth: '350px' }}>
+                            <div className='d-flex flex-column p-2 my-3 border rounded' style={{ backgroundColor: '#e8ebe9', minWidth: '350px' }}>
                                 <div className='d-flex flex-row justify-content-between' style={{ minWidth: '350px' }}>
                                     <div className='d-flex flex-column align-items-center'>
                                         <span>Status</span>
@@ -379,13 +379,13 @@ const Home = () => {
                                         </span>
                                     </div>
                                 </div>
-                                <p className='mt-2'><strong>Address: </strong> {memberDetails && memberDetails[0].AddressLine1}</p>
+                                <p className='mt-2 m-0'><strong>Address: </strong> {memberDetails && memberDetails[0].AddressLine1}</p>
                             </div>
 
                             <h5 className='fw-bold'>SELECT FAMILY MEMBER</h5>
 
                             <ul className='mt-3 list-unstyled'>
-                                <li className='d-flex flex-row justify-content-between align-items-center border border-2 p-2'
+                                <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded px-2 py-1'
                                     style={{ minWidth: '350px', cursor: 'pointer' }}
                                     key={memberDetails && memberDetails[0].CardPurchasedMemberId}
                                     onClick={() => bookAppointment(memberDetails, 'member')}
@@ -399,7 +399,7 @@ const Home = () => {
                                 </li>
 
                                 {dependents && dependents.length > 0 && dependents.map(each => (
-                                    <li className='d-flex flex-row justify-content-between align-items-center border border-2 p-2 mt-2'
+                                    <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded p-2 mt-2'
                                         style={{ minWidth: '350px', cursor: 'pointer' }}
                                         key={each.memberDependentId}
                                         onClick={() => bookAppointment(each, 'dependent')}
@@ -415,18 +415,60 @@ const Home = () => {
                             </ul>
 
                             <div className='d-flex flex-column mt-5'>
-                                <div style={{
-                                    width: '300px', height: '180px',
-                                    backgroundImage: 'url(https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg)',
-                                    backgroundSize: 'cover',
-                                    borderRadius: '10px'
-                                }}>
-                                    <p style={{
-                                        fontSize: '1rem', color: 'white',
-                                        textShadow: '1px 1px 2px black', marginTop: '135px', marginLeft: '30px'
-                                    }}>
-                                        {memberDetails && memberDetails[0].OHOCardNumber}
-                                    </p>
+                                <div
+                                    style={{
+                                        width: "350px", height: "200px", margin: "10px",
+                                        perspective: "1000px", borderRadius: "5px",
+                                    }}
+                                    onClick={() => setIsFlipped(!isFlipped)}
+                                >
+                                    <div
+                                        style={{
+                                            position: "relative", width: "100%", height: "100%",
+                                            textAlign: "center", transition: "transform 0.6s", transformStyle: "preserve-3d",
+                                            transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                                            borderRadius: "8px",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                position: "absolute", width: "100%", height: "100%",
+                                                backfaceVisibility: "hidden", borderRadius: "10px",
+                                                overflow: "hidden",
+                                            }}
+                                        >
+                                            <img
+                                                src={"https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg"}
+                                                alt="Front side"
+                                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                            />
+                                            <p
+                                                style={{
+                                                    position: "absolute", bottom: "6px", left: "25px",
+                                                    color: "white", fontSize: "1.1rem", textShadow: "1px 1px 2px black",
+                                                    padding: "5px 10px", borderRadius: "5px",
+                                                }}
+                                            >
+                                                {memberDetails && memberDetails[0].OHOCardNumber}
+                                            </p>
+                                        </div>
+
+                                        <div
+                                            style={{
+                                                position: "absolute", width: "100%", height: "100%",
+                                                backfaceVisibility: "hidden", transform: "rotateY(180deg)",
+                                                borderRadius: "10px", overflow: "hidden"
+                                            }}
+                                        >
+                                            <img
+                                                src={
+                                                    "https://ohoindia-mous.s3.ap-south-1.amazonaws.com/3b56a6e5-41ca-4049-a882-02a3d14e1d78.jpg"
+                                                }
+                                                alt="Back side"
+                                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -441,7 +483,7 @@ const Home = () => {
                             </div>
 
                             <p className='text-center fw-semibold mt-3'>Need any support ?</p>
-                            <div className='d-flex flex-row mb-4' style={{fontSize: '15px'}}>
+                            <div className='d-flex flex-row mb-4' style={{ fontSize: '15px' }}>
                                 <span className='me-3'>
                                     <i class="bi bi-telephone"></i>
                                     +91 7671 997 108
@@ -458,7 +500,7 @@ const Home = () => {
                                 />
                                 <span className="app-brand-text fw-bolder"
                                     style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
-                                <span className='fw-semibold mt-3' style={{color: '#0E94C3', fontSize: '13px'}}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                                <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                             </div>
                         </>
                     )}
@@ -471,7 +513,8 @@ const Home = () => {
         isformOpen ? (
             <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
                 <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5"
-                    style={{minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                    style={{
+                        minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
                         minHeight: '100vh'
                     }}
                 >
@@ -599,7 +642,15 @@ const Home = () => {
                             <div className="text-center">
                                 <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
                                 <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
-                                <button type="submit" className="btn btn-success">Submit</button>
+                                <button type="submit" className="btn btn-success" style={{width: '80px', height: '40px'}}>
+                                    {submitLoading ? (
+                                        <div className="spinner-border text-white" role="status">
+                                            {/* <span className="sr-only">Loading...</span> */}
+                                        </div>
+                                    ) : (
+                                        'Submit'
+                                    )}
+                                </button>
                             </div>
                             {formSuccessMessage && formSuccessMessage.length > 0 && <p className='text-success text-center'>{formSuccessMessage}</p>}
                             {eligibilityMessage && eligibilityMessage.length > 0 && <p className='text-danger text-center'>{eligibilityMessage}</p>}

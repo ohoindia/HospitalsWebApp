@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const HospitalValidation = () => {
+    const [hospitalCode, setHospitalCode] = useState('');
+    const [confirmDisable, setConfirmDisable] = useState(true);
     const [windowSize, setWindowSize] = useState({
         width: window.innerWidth,
         height: window.innerHeight,
     });
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleResize = () => {
@@ -20,6 +25,22 @@ const HospitalValidation = () => {
             window.removeEventListener("resize", handleResize);
         };
     }, []);
+
+    const onChangeHosCode = (e) => {
+        setHospitalCode(e.target.value);
+
+        if (e.target.value.length === 6) {
+            setConfirmDisable(false);
+        } else {
+            setConfirmDisable(true);
+        }
+    };
+
+    const handleHospitalCode = () => {
+        if (hospitalCode.length === 6) {
+            navigate('/verify', {replace: true});
+        }   
+    }
 
     return (
         <div
@@ -48,28 +69,16 @@ const HospitalValidation = () => {
                                 {/* <span className="text-danger"> *</span> */}
                             </label>
 
-                            <input type="text" className="ps-2" maxLength="14"
+                            <input type="text" className="ps-2" maxLength="6"
                                 id="cardNumber" style={{ minHeight: '35px', minWidth: '350px' }}
-                                placeholder='XXXXXXXX'
-                            />
-
-                            <p className='text-center text-secondary my-2' style={{ fontSize: '12px' }}>
-                                -------------------- <span className='mx-3'>OR Select </span> --------------------
-                            </p>
-
-                            <label htmlFor="mobileNumber" className="form-label text-black fw-medium" style={{ fontSize: '14px' }}>Select Your Hospital
-                                {/* <span className="text-danger"> *</span> */}
-                            </label>
-
-                            <input type="number" className=" ps-2" maxLength="12"
-                                id="mobileNumber" style={{ minHeight: '35px', minWidth: '350px' }}
-                            />
-
-
-                            
+                                placeholder='Enter Hospital Code'
+                                onChange={(e) => onChangeHosCode(e)}
+                            />                            
 
                             <div className='d-flex flex-column my-4'>
-                                <button type="button" className="btn btn-primary fw-semibold" style={{ backgroundColor: '#0E94C3' }} >
+                                <button type="button" className="btn btn-primary fw-semibold" style={{ backgroundColor: '#0E94C3' }} 
+                                    onClick={handleHospitalCode} disabled={confirmDisable}
+                                >
                                     CONFIRM
                                 </button>
                             </div>
