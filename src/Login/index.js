@@ -20,11 +20,10 @@ const Login = () => {
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [otpLoading, setOtpLoading] = useState(false);
     const [verifyLoading, setVerifyLoading] = useState(false);
+    const [resendOtp, setResendOtp] = useState(false);
     const inputsRef = useRef([]);
 
     const navigate = useNavigate();
-
-    console.log("OTP: ", cardNumber);
 
     // Handle input change
     const handleChange = (value, index) => {
@@ -90,7 +89,9 @@ const Login = () => {
             }, 1000);
         } else if (timeLeft === 0) {
             setIsRunning(false);
-            setIsOtpSent(false);
+            setResendOtp(false);
+            setOtp(new Array(6).fill(""));
+            setOtpError('');
 
             if (mobileNumber.length >= 10) {
                 setDisableOtp(false);
@@ -117,10 +118,15 @@ const Login = () => {
                     setTimeLeft(120);
                     setIsRunning(true);
                     setNumberError('');
-                    setIsOtpSent(true);
                     setDisableOtp(true);
                     setGuid(otpResponse.guid);
                     setOtpLoading(false);
+                    setMobileNumber(otpResponse.mobileNumber)
+                    if (isOtpSent) {
+                        setResendOtp(true);
+                    } else {
+                        setIsOtpSent(true);
+                    }
                 } else {
                     setIsRunning(false);
                     setNumberError(otpResponse.msg);
@@ -145,10 +151,15 @@ const Login = () => {
                     setTimeLeft(120);
                     setIsRunning(true);
                     setNumberError('');
-                    setIsOtpSent(true);
                     setDisableOtp(true);
                     setGuid(otpResponse.guid);
                     setOtpLoading(false);
+                    setMobileNumber(otpResponse.mobileNumber)
+                    if (isOtpSent) {
+                        setResendOtp(true);
+                    } else {
+                        setIsOtpSent(true);
+                    }
                 } else {
                     setIsRunning(false);
                     setNumberError(otpResponse.msg);
@@ -164,6 +175,8 @@ const Login = () => {
     const handleVerify = async (e) => {
         e.preventDefault();
 
+        console.log("Comming in verify", mobileNumber, cardNumber);
+
         if (mobileNumber.length === 10) {
             setVerifyLoading(true);
             const verifyResponse = await fetchData('Member/OTPValidation', {
@@ -171,6 +184,8 @@ const Login = () => {
                 otpGenerated: otp.join(''),
                 guid
             });
+
+            console.log("Veri: ", verifyResponse);
 
             if (verifyResponse.status) {
                 setIsVerified(true);
@@ -186,9 +201,15 @@ const Login = () => {
                 setOtpError(verifyResponse.msg);
                 setVerifyLoading(false);
             }
-        } else if (cardNumber.length === 12) {
+        } else if (cardNumber.length === 14) {
             setVerifyLoading(true);
             const verifyResponse = await fetchData('Member/OTPValidation', {
+                cardNumber: cardNumber,
+                otpGenerated: otp.join(''),
+                guid
+            });
+
+            console.log("Veri: ", verifyResponse, {
                 cardNumber: cardNumber,
                 otpGenerated: otp.join(''),
                 guid
