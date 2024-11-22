@@ -26,8 +26,22 @@ const Login = () => {
         height: window.innerHeight,
     });
     const [isFlipped, setIsFlipped] = useState(false);
+    const hospitalName = sessionStorage.getItem('hospitalName');
+    const hospitalLogo = sessionStorage.getItem('hospitalImage');
+    const [hospitalImage, setHospitalImage] = useState('');
+    const [remainingOtp, setRemainingOtp] = useState();
 
     const inputsRef = useRef([]);
+
+    useEffect(() => {
+        const getMocUrl = async () => {
+            const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
+            const imageUrl = response && response.length > 0 && response.find(val => val.ConfigKey === "hospitalImagesURL");
+            setHospitalImage(imageUrl.ConfigValue + hospitalLogo);
+        };
+
+        getMocUrl();
+    }, []);
 
     useEffect(() => {
         const handleResize = () => {
@@ -46,7 +60,6 @@ const Login = () => {
 
     const navigate = useNavigate();
 
-    // Handle input change
     const handleChange = (value, index) => {
         if (!isNaN(value) && value.length <= 1) {
             const newOtp = [...otp];
@@ -67,7 +80,6 @@ const Login = () => {
         }
     };
 
-    // Handle key events (Backspace)
     const handleKeyDown = (e, index) => {
         if (e.key === "Backspace") {
             const newOtp = [...otp];
@@ -83,7 +95,6 @@ const Login = () => {
         }
     };
 
-    // Handle paste functionality
     const handlePaste = (e) => {
         e.preventDefault();
         const pastedData = e.clipboardData.getData("text").slice(0, 6);
@@ -147,7 +158,8 @@ const Login = () => {
                     setDisableOtp(true);
                     setGuid(otpResponse.guid);
                     setOtpLoading(false);
-                    setMobileNumber(otpResponse.mobileNumber)
+                    setMobileNumber(otpResponse.mobileNumber);
+                    setRemainingOtp(otpResponse.remainingAttempts);
                     if (isOtpSent) {
                         setResendOtp(true);
                     } else {
@@ -155,7 +167,7 @@ const Login = () => {
                     }
                 } else {
                     setIsRunning(false);
-                    setNumberError(otpResponse.msg);
+                    setNumberError(otpResponse.message);
                     setOtpLoading(false);
                 }
             } else {
@@ -180,7 +192,8 @@ const Login = () => {
                     setDisableOtp(true);
                     setGuid(otpResponse.guid);
                     setOtpLoading(false);
-                    setMobileNumber(otpResponse.mobileNumber)
+                    setMobileNumber(otpResponse.mobileNumber);
+                    setRemainingOtp(otpResponse.remainingAttempts);
                     if (isOtpSent) {
                         setResendOtp(true);
                     } else {
@@ -188,7 +201,7 @@ const Login = () => {
                     }
                 } else {
                     setIsRunning(false);
-                    setNumberError(otpResponse.msg);
+                    setNumberError(otpResponse.message);
                     setOtpLoading(false);
                 }
             } else {
@@ -201,8 +214,6 @@ const Login = () => {
     const handleVerify = async (e) => {
         e.preventDefault();
 
-        console.log("Comming in verify", mobileNumber, cardNumber);
-
         if (mobileNumber.length === 10) {
             setVerifyLoading(true);
             const verifyResponse = await fetchData('Member/OTPValidation', {
@@ -214,10 +225,15 @@ const Login = () => {
             console.log("Veri: ", verifyResponse);
 
             if (verifyResponse.status) {
+                const currentTime = new Date().getTime();
+                const expirationTime = currentTime + 10 * 60 * 1000;
+
                 setIsVerified(true);
                 setMemberId(verifyResponse.memberId);
                 setIsOtpSent(false);
                 setVerifyLoading(false);
+                sessionStorage.setItem('memberId', verifyResponse.memberId);
+                sessionStorage.setItem('memberTime', expirationTime);
 
                 navigate('/bookconsultation', {
                     replace: true,
@@ -235,17 +251,18 @@ const Login = () => {
                 guid
             });
 
-            console.log("Veri: ", verifyResponse, {
-                cardNumber: cardNumber,
-                otpGenerated: otp.join(''),
-                guid
-            });
+            console.log("Veri: ", verifyResponse);
 
             if (verifyResponse.status) {
+                const currentTime = new Date().getTime();
+                const expirationTime = currentTime + 10 * 60 * 1000;
+
                 setIsVerified(true);
                 setMemberId(verifyResponse.memberId);
                 setIsOtpSent(false);
                 setVerifyLoading(false);
+                sessionStorage.setItem('memberId', verifyResponse.memberId);
+                sessionStorage.setItem('memberTime', expirationTime);
 
                 navigate('/bookconsultation', {
                     replace: true,
@@ -310,13 +327,28 @@ const Login = () => {
                 minHeight: '100vh'
             }}
         >
-            <div className="d-flex flex-column align-items-center mb-2">
-                <img src="/applogo.png" alt="logo"
-                    style={{ height: '60px', width: '60px' }}
-                />
-                <span className="app-brand-text fw-bolder"
-                    style={{ fontSize: '25px', color: '#041F60' }} >OHOINDIA</span>
-            </div>
+            {hospitalName || hospitalImage ? (
+                <div className="d-flex flex-column align-items-center mb-2 mt-5">
+                    {hospitalImage && (
+                        <img src={hospitalImage} alt="logo"
+                            style={{ maxHeight: '100px', maxWidth: '100px' }}
+                        />
+                    )}
+
+                    {hospitalName && (
+                        <span className="app-brand-text fw-bolder text-center"
+                            style={{ fontSize: '20px', color: '#041F60' }} >{hospitalName}</span>
+                    )}
+                </div>
+            ) : (
+                <div className="d-flex flex-column align-items-center mb-2 mt-5">
+                    <img src="/applogo.png" alt="logo"
+                        style={{ maxHeight: '60px', maxWidth: '60px' }}
+                    />
+                    <span className="app-brand-text fw-bolder"
+                        style={{ fontSize: '25px', color: '#041F60' }} >OHOINDIA</span>
+                </div>
+            )}
 
             {timeLeft <= 0 ? (
                 <>
@@ -332,10 +364,23 @@ const Login = () => {
 
                     <div className='d-flex flex-column justify-content-center'>
                         <button type="submit" className="btn btn-primary" onClick={(e) => handleOtpSent(e)}
-                            style={{ backgroundColor: '#0E94C3', minWidth: '320px' }}>
-                            RESEND OTP <i className="bi bi-chevron-right fw-bolder"></i>
+                            style={{ backgroundColor: '#0E94C3', minWidth: '320px', maxHeight: '38px' }}>
+                            {otpLoading ? (
+                                <div className="spinner-border text-white fs-5" role="status">
+                                    {/* <span className="sr-only">Loading...</span> */}
+                                </div>
+                            ) : (<>
+                                RESEND OTP <i className="bi bi-chevron-right fw-bolder"></i></>
+                            )}                            
                         </button>
+                        {numberError && numberError.length > 0 && (
+                            <p className='text-danger'>{numberError}</p>
+                        )}
                     </div>
+
+                    {remainingOtp && (
+                        <span className='text-center'>Maxium of {remainingOtp} times more left</span>
+                    )}
 
                     <div className="d-flex flex-column align-items-center mt-auto mb-2">
                         <img src="/applogo.png" alt="logo"
@@ -389,27 +434,21 @@ const Login = () => {
                         </div>
                     </div>
 
-                    <div className='text-start mb-3'>
-                        {/* {isRunning && (
-                    <p className='text-success'>OTP sent successfully. Resend OTP in: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</p>
-                    )} */}
-                        {otpError && otpError.length > 0 && (
-                            <p className='text-danger'>{otpError}</p>
-                        )}
-                    </div>
-
                     <div className='d-flex flex-column justify-content-center'>
                         <button type="submit" className="btn btn-primary" onClick={(e) => handleVerify(e)}
-                            disabled={disableVerify} style={{ backgroundColor: '#0E94C3', minWidth: '320px' }}
+                            disabled={disableVerify || verifyLoading} style={{ backgroundColor: '#0E94C3', minWidth: '320px', maxHeight: '38px' }}
                         >
                             {verifyLoading ? (
-                                <div className="spinner-border text-white" role="status">
+                                <div className="spinner-border text-white fs-5" role="status">
                                     {/* <span className="sr-only">Loading...</span> */}
                                 </div>
                             ) : (<>
                                 Verify  <i className="bi bi-chevron-right fw-bolder"></i></>
                             )}
                         </button>
+                        {otpError && otpError.length > 0 && (
+                            <p className='text-danger'>{otpError}</p>
+                        )}
                     </div>
 
                     <div className="d-flex flex-column align-items-center mt-auto mb-2">
@@ -438,14 +477,30 @@ const Login = () => {
                         minHeight: '100vh'
                     }}
                 >
-                    <div className="d-flex flex-column align-items-center mb-2 mt-5">
-                        <img src="/applogo.png" alt="logo"
-                            style={{ height: '60px', width: '60px' }}
-                        />
-                        <span className="app-brand-text fw-bolder"
-                            style={{ fontSize: '25px', color: '#041F60' }} >OHOINDIA</span>
-                    </div>
-                    <h5 className="text-secondary mb-2 text-center fw-bold" style={{ fontSize: '16px' }}>MEMBERSHIP VERIFICATION</h5>
+                    {hospitalName || hospitalImage ? (
+                        <div className="d-flex flex-column align-items-center mb-2 mt-5">
+                            {hospitalImage && (
+                                <img src={hospitalImage} alt="logo"
+                                    style={{ maxHeight: '100px', maxWidth: '100px' }}
+                                />
+                            )}
+
+                            {hospitalName && (
+                                <span className="app-brand-text fw-bolder text-center"
+                                    style={{ fontSize: '20px', color: '#041F60' }} >{hospitalName}</span>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="d-flex flex-column align-items-center mb-2 mt-5">
+                            <img src="/applogo.png" alt="logo"
+                                style={{ maxHeight: '60px', maxWidth: '60px' }}
+                            />
+                            <span className="app-brand-text fw-bolder"
+                                style={{ fontSize: '25px', color: '#041F60' }} >OHOINDIA</span>
+                        </div>
+                    )}
+
+                    <h5 className="text-secondary mb-2 text-center fw-bold" style={{ fontSize: '16px' }}>OHOINDIA MEMBERSHIP VERIFICATION</h5>
                     <form className='mt-3'>
                         <div className="text-start">
 
@@ -477,10 +532,10 @@ const Login = () => {
                                 />
 
                                 <div className='d-flex flex-column my-4'>
-                                    <button type="button" className="btn btn-primary fw-semibold" style={{ backgroundColor: '#0E94C3' }} disabled={disableOtp}
+                                    <button type="button" className="btn btn-primary fw-semibold" style={{ backgroundColor: '#0E94C3', maxHeight: '38px' }} disabled={disableOtp}
                                         onClick={handleOtpSent} >
                                         {otpLoading ? (
-                                            <div className="spinner-border text-white" role="status">
+                                            <div className="spinner-border text-white fs-5" role="status">
                                                 {/* <span className="sr-only">Loading...</span> */}
                                             </div>
                                         ) : (<>
@@ -499,21 +554,24 @@ const Login = () => {
                                 <div className='d-flex flex-column align-items-center'>
                                     <span style={{ fontSize: '14px' }}>OHO card number shown as below</span>
                                     <div
-                                        style={{ width: "330px", height: "200px", margin: "10px",
+                                        style={{
+                                            width: "330px", height: "200px", margin: "10px",
                                             perspective: "1000px", borderRadius: "5px",
                                         }}
                                         onClick={() => setIsFlipped(!isFlipped)}
                                     >
                                         <div
-                                            style={{ position: "relative", width: "100%", height: "100%",
-                                                textAlign: "center", transition: "transform 0.6s", transformStyle: "preserve-3d", 
+                                            style={{
+                                                position: "relative", width: "100%", height: "100%",
+                                                textAlign: "center", transition: "transform 0.6s", transformStyle: "preserve-3d",
                                                 transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
                                                 borderRadius: "8px",
                                             }}
                                         >
                                             {/* Front Side */}
                                             <div
-                                                style={{ position: "absolute", width: "100%", height: "100%",
+                                                style={{
+                                                    position: "absolute", width: "100%", height: "100%",
                                                     backfaceVisibility: "hidden", borderRadius: "10px",
                                                     overflow: "hidden",
                                                 }}
@@ -525,7 +583,8 @@ const Login = () => {
                                                 />
                                                 {/* Card Number Overlay */}
                                                 <p className='border border-3 border-danger'
-                                                    style={{ position: "absolute", bottom: "8px", left: "20px",
+                                                    style={{
+                                                        position: "absolute", bottom: "8px", left: "20px",
                                                         color: "white", fontSize: "1.2rem", textShadow: "1px 1px 2px black",
                                                         padding: "5px 10px", borderRadius: "5px",
                                                     }}
@@ -536,7 +595,8 @@ const Login = () => {
 
                                             {/* Back Side */}
                                             <div
-                                                style={{ position: "absolute", width: "100%", height: "100%",
+                                                style={{
+                                                    position: "absolute", width: "100%", height: "100%",
                                                     backfaceVisibility: "hidden", transform: "rotateY(180deg)",
                                                     borderRadius: "10px", overflow: "hidden"
                                                 }}

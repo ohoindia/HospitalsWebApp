@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchData } from '../Helpers/externapi';
 
 const HospitalValidation = () => {
     const [hospitalCode, setHospitalCode] = useState('');
     const [confirmDisable, setConfirmDisable] = useState(true);
+    const [confirmLoad, setConfirmLoad] = useState(false);
     const [windowSize, setWindowSize] = useState({
         width: window.innerWidth,
         height: window.innerHeight,
     });
+    const [hosCodeError, setHosCodeError] = useState('');
 
     const navigate = useNavigate();
 
@@ -36,10 +39,33 @@ const HospitalValidation = () => {
         }
     };
 
-    const handleHospitalCode = () => {
+    const handleHospitalCode = async (e) => {
+        e.preventDefault();
+
         if (hospitalCode.length === 6) {
-            navigate('/verify', {replace: true});
-        }   
+            setConfirmLoad(true);
+            const hosCodeResponse = await fetchData('Hospital/hospitalLogin', { hospitalCode })
+
+            if (hosCodeResponse.status) {
+                const currentTime = new Date().getTime();
+                const expirationTime = currentTime + 24 * 60 * 60 * 1000;
+
+                sessionStorage.setItem('hospitalName', hosCodeResponse.hospitalName);
+                sessionStorage.setItem('hospitalImage', hosCodeResponse.hospitalImage);
+                sessionStorage.setItem('hospitalId', hosCodeResponse.hospitalId);
+                sessionStorage.setItem('hospitalTime', expirationTime);
+
+                setHosCodeError('');
+
+                navigate('/verify', { replace: true });
+            } else {
+                setHosCodeError(hosCodeResponse.message);
+            }
+            setConfirmLoad(false);
+
+            console.log("hosCodeResponse: ", hosCodeResponse);
+
+        }
     }
 
     return (
@@ -73,14 +99,23 @@ const HospitalValidation = () => {
                                 id="cardNumber" style={{ minHeight: '35px', minWidth: '350px' }}
                                 placeholder='Enter Hospital Code'
                                 onChange={(e) => onChangeHosCode(e)}
-                            />                            
+                            />
 
                             <div className='d-flex flex-column my-4'>
-                                <button type="button" className="btn btn-primary fw-semibold" style={{ backgroundColor: '#0E94C3' }} 
-                                    onClick={handleHospitalCode} disabled={confirmDisable}
+                                <button type="submit" className="btn btn-primary fw-semibold" style={{ backgroundColor: '#0E94C3', maxHeight: '38px' }}
+                                    onClick={(e) => handleHospitalCode(e)} disabled={confirmDisable || confirmLoad}
                                 >
-                                    CONFIRM
+                                    {confirmLoad ? (
+                                        <div className="spinner-border text-white fs-5" role="status">
+                                            {/* <span className="sr-only">Loading...</span> */}
+                                        </div>
+                                    ) : (
+                                        'SUBMIT'
+                                    )}                                    
                                 </button>
+                                {hosCodeError && hosCodeError.length > 0 && (
+                                    <p className='text-danger m-0' style={{ maxWidth: '350px' }}>{hosCodeError}</p>
+                                )}
                             </div>
 
                             <hr className='mt-5' />

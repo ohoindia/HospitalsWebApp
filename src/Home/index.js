@@ -29,10 +29,12 @@ const Home = () => {
     });
     const [isFlipped, setIsFlipped] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
+    const [availableCoupons, setAvailableCoupons] = useState();
 
     const navigate = useNavigate();
     const location = useLocation();
-    const { memberId } = location.state || {};
+    const memberId = sessionStorage.getItem('memberId');
+    const hospitalId = sessionStorage.getItem('hospitalId');
 
     // const memberId = 25587;
 
@@ -310,7 +312,15 @@ const Home = () => {
         })
     };
 
-    const bookAppointment = (data, value) => {
+    const bookAppointment = async (data, value) => {
+        const fetchAvailableCoupons = await fetchData('BookingConsultation/checkAvailableCoupons', {
+            cardNumber: memberDetails[0].OHOCardNumber,
+            hospitalId
+        });
+
+        if (fetchAvailableCoupons && fetchAvailableCoupons.status) {
+            setAvailableCoupons(fetchAvailableCoupons.availableCoupons);
+        }
 
         if (value === 'member') {
             setFormData((preVal) => ({
@@ -351,7 +361,7 @@ const Home = () => {
                     }}
                 >
                     <Checkmark size='medium' />
-                    <h5 className="text-black m-2 text-center fw-bold fs-5">MEMBERSHIP VERIFICATION SUCCESS !</h5>
+                    <h5 className="text-black m-2 text-center fw-bold" style={{fontSize: '18px'}}>OHOINDIA MEMBERSHIP VERIFICATION SUCCESS !</h5>
 
                     {isDataFetched && (
                         <>
