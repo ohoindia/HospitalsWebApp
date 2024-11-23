@@ -4,10 +4,11 @@ import { Outlet, useNavigate } from 'react-router-dom';
 const ProtectedRoute = () => {
     const navigate = useNavigate();
     const hospitalTime = sessionStorage.getItem('hospitalTime');
-    const memberTime = sessionStorage.getItem('memberTime');
-    const currentTime = new Date().getTime();
+    const memberTime = sessionStorage.getItem('memberTime');    
 
     React.useEffect(() => {
+        const currentTime = new Date().getTime();
+
         if (!hospitalTime) {
             navigate("/", { replace: true });
         } else if (currentTime >= parseInt(hospitalTime, 10)) {
@@ -22,7 +23,7 @@ const ProtectedRoute = () => {
             sessionStorage.removeItem('memberTime');
             navigate("/verify", { replace: true });
         }
-    }, [hospitalTime, memberTime, currentTime, navigate]);
+    }, [hospitalTime, memberTime, navigate]);
 
     return <Outlet />;
 };

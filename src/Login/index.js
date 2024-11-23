@@ -31,8 +31,6 @@ const Login = () => {
     const [hospitalImage, setHospitalImage] = useState('');
     const [remainingOtp, setRemainingOtp] = useState();
 
-    console.log("Hospital: ", hospitalLogo, hospitalName)
-
     const inputsRef = useRef([]);
 
     useEffect(() => {
@@ -66,7 +64,6 @@ const Login = () => {
         if (!isNaN(value) && value.length <= 1) {
             const newOtp = [...otp];
             newOtp[index] = value;
-            console.log("newOtp: ", newOtp.join('').length);
             setOtp(newOtp);
 
             if (newOtp.join('').length < 6) {
@@ -148,10 +145,6 @@ const Login = () => {
                 cardNumber: cardNumber
             });
 
-            console.log("card Res: ", otpResponse, {
-                cardNumber: cardNumber
-            });
-
             if (otpResponse) {
                 if (otpResponse.status) {
                     setTimeLeft(120);
@@ -179,10 +172,6 @@ const Login = () => {
         } else if (mobileNumber.length === 10) {
             setOtpLoading(true);
             const otpResponse = await fetchData('OHOCards/CardNumberorMobileNoVerification', {
-                mobileNumber
-            });
-
-            console.log("number Res: ", otpResponse, {
                 mobileNumber
             });
 
@@ -224,8 +213,6 @@ const Login = () => {
                 guid
             });
 
-            console.log("Veri: ", verifyResponse);
-
             if (verifyResponse.status) {
                 const currentTime = new Date().getTime();
                 const expirationTime = currentTime + 10 * 60 * 1000;
@@ -252,8 +239,6 @@ const Login = () => {
                 otpGenerated: otp.join(''),
                 guid
             });
-
-            console.log("Veri: ", verifyResponse);
 
             if (verifyResponse.status) {
                 const currentTime = new Date().getTime();

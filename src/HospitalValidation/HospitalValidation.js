@@ -62,9 +62,6 @@ const HospitalValidation = () => {
                 setHosCodeError(hosCodeResponse.message);
             }
             setConfirmLoad(false);
-
-            console.log("hosCodeResponse: ", hosCodeResponse);
-
         }
     }
 

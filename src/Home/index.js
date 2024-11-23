@@ -234,8 +234,6 @@ const Home = () => {
 
         const noError = checkErrors();
 
-        console.log("noError: ", noError);
-
         if (noError) {
             const payload = {
                 name: formData.FullName,
@@ -259,8 +257,6 @@ const Home = () => {
             setSubmitLoading(true);
 
             const responseEligible = await fetchData(`BookingConsultation/bookAppointment/add`, { ...payload });
-
-            console.log("Response Eligibility: ", responseEligible, { ...payload });
 
             if (responseEligible.status) {
                 setFormSuccessMessage(responseEligible.message);
@@ -514,11 +510,11 @@ const Home = () => {
                             <p className='text-center fw-semibold mt-3'>Need any support ?</p>
                             <div className='d-flex flex-row mb-4' style={{ fontSize: '15px' }}>
                                 <span className='me-3'>
-                                    <i class="bi bi-telephone"></i>
+                                    <i className="bi bi-telephone"></i>
                                     +91 7671 997 108
                                 </span>
                                 <span className='ms-3'>
-                                    <i class="bi bi-telephone"></i>
+                                    <i className="bi bi-telephone"></i>
                                     +91 7032 107 108
                                 </span>
                             </div>
