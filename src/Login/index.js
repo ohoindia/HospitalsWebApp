@@ -31,6 +31,8 @@ const Login = () => {
     const [hospitalImage, setHospitalImage] = useState('');
     const [remainingOtp, setRemainingOtp] = useState();
 
+    console.log("Hospital: ", hospitalLogo, hospitalName)
+
     const inputsRef = useRef([]);
 
     useEffect(() => {

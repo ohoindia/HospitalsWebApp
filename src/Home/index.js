@@ -14,10 +14,10 @@ const Home = () => {
     const [isformOpen, setIsformOpen] = useState(false);
     const [formData, setFormData] = useState({
         FullName: '', MobileNumber: '', Cardnumber: '', Gender: '', DateofBirth: '', Age: '', Address: '',
-        DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: '', Appointment: '', DiscountPercentage: 0.0,
+        DateAndTime: '', DoctorName: '', ServiceType: '', Appointment: '', DiscountPercentage: 0.0,
         ConsultationFee: 0
     });
-    const [formErrors, setFormErrors] = useState({ DateAndTime: '', HospitalName: '', Branch: '', ServiceType: '', Appointment: '' });
+    const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: '', Appointment: '' });
     const [eligibilityMessage, setEligibilityMessage] = useState();
     const [formSuccessMessage, setFormSuccessMessage] = useState();
     const [isDiscountedPercentVisible, setIsDiscountedPercentVisible] = useState(false);
@@ -30,11 +30,15 @@ const Home = () => {
     const [isFlipped, setIsFlipped] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
     const [availableCoupons, setAvailableCoupons] = useState();
+    const [displayCoupons, setDisplayCoupons] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
     const memberId = sessionStorage.getItem('memberId');
     const hospitalId = sessionStorage.getItem('hospitalId');
+    const hospitalName = sessionStorage.getItem('hospitalName');
+    const hospitalLogo = sessionStorage.getItem('hospitalImage');
+    const [hospitalImage, setHospitalImage] = useState('');
 
     // const memberId = 25587;
 
@@ -67,13 +71,21 @@ const Home = () => {
                     Address: responseMemberDetails[0].AddressLine1
                 }))
             )
-        }
+        };
 
         const fetchDependents = async () => {
             const responseDependents = await fetchAllData(`MemberDependent/GetByMemberId/${memberId}`);
 
             setDependents(responseDependents);
-        }
+        };
+
+        const getMocUrl = async () => {
+            const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
+            const imageUrl = response && response.length > 0 && response.find(val => val.ConfigKey === "hospitalImagesURL");
+            setHospitalImage(imageUrl.ConfigValue + hospitalLogo);
+        };
+
+        getMocUrl();
 
         fetchMemberDetails();
         fetchDependents();
@@ -113,7 +125,6 @@ const Home = () => {
     const onChangeHandler = (e) => {
 
         if (e.target.name === 'Appointment') {
-
             if (e.target.id === 'DiscountedConsultation' || e.target.id === 'DiscountedPharmacy' || e.target.id === 'DiscountedInvestigation') {
                 setIsDiscountedPercentVisible(true);
             } else {
@@ -124,7 +135,6 @@ const Home = () => {
                 ...preVal, [e.target.name]: e.target.id
             }))
         } else if (e.target.name === 'FullName') {
-
             memberDetails[0].FullName === e.target.value ? (
                 setFormData((preVal) => ({
                     ...preVal, FullName: memberDetails[0].FullName, MobileNumber: memberDetails[0].MobileNumber, Cardnumber: memberDetails[0].OHOCardNumber,
@@ -186,7 +196,7 @@ const Home = () => {
     };
 
     const checkErrors = () => {
-        if (formData.DateAndTime === '' || formData.HospitalName.length < 2 ||
+        if (formData.DateAndTime === '' ||
             formData.ServiceType.length < 2 || formData.Appointment === '') {
 
             if (formData.DateAndTime === '') {
@@ -194,11 +204,11 @@ const Home = () => {
                     ...preVal, DateAndTime: 'Please select appointment date & time *'
                 }))
             }
-            if (formData.HospitalName.length < 2) {
-                setFormErrors(preVal => ({
-                    ...preVal, HospitalName: 'Please Enter valid hospital name *'
-                }))
-            }
+            // if (formData.HospitalName.length < 2) {
+            //     setFormErrors(preVal => ({
+            //         ...preVal, HospitalName: 'Please Enter valid hospital name *'
+            //     }))
+            // }
             // if (formData.Branch.length < 2) {
             //     setFormErrors(preVal => ({
             //         ...preVal, Branch: 'Please Enter valid branch name *'
@@ -224,6 +234,8 @@ const Home = () => {
 
         const noError = checkErrors();
 
+        console.log("noError: ", noError);
+
         if (noError) {
             const payload = {
                 name: formData.FullName,
@@ -234,13 +246,13 @@ const Home = () => {
                 age: formData.Age,
                 appointmentDate: formData.DateAndTime,
                 address: formData.Address,
-                hospitalName: formData.HospitalName,
-                branch: formData.Branch,
+                hospitalName: hospitalName,
+                hospitalId: hospitalId,
                 serviceType: formData.ServiceType,
-                consultationFee: formData.ConsultationFee,
+                consultationFee: formData.ConsultationFee === '' ? 0 : formData.ConsultationFee,
                 memberId: memberId,
                 doctorName: formData.DoctorName,
-                discountinPercentage: formData.DiscountPercentage,
+                discountinPercentage: formData.DiscountPercentage === '' ? 0.0 : formData.DiscountPercentage,
                 appointment: formData.Appointment
             }
 
@@ -256,12 +268,13 @@ const Home = () => {
                 setSubmitLoading(false);
 
                 setFormErrors({
-                    DateAndTime: '', HospitalName: '', Branch: '', ServiceType: '', Appointment: ''
+                    DateAndTime: '', ServiceType: '', Appointment: ''
                 });
+                getAvailableCoupons();
 
                 setTimeout(() => {
                     setFormData(preVal => ({
-                        ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: '', Appointment: '',
+                        ...preVal, DateAndTime: '', DoctorName: '', ServiceType: '', Appointment: '',
                         DiscountPercentage: 0.0, ConsultationFee: 0
                     }));
 
@@ -312,7 +325,7 @@ const Home = () => {
         })
     };
 
-    const bookAppointment = async (data, value) => {
+    const getAvailableCoupons = async () => {
         const fetchAvailableCoupons = await fetchData('BookingConsultation/checkAvailableCoupons', {
             cardNumber: memberDetails[0].OHOCardNumber,
             hospitalId
@@ -321,6 +334,10 @@ const Home = () => {
         if (fetchAvailableCoupons && fetchAvailableCoupons.status) {
             setAvailableCoupons(fetchAvailableCoupons.availableCoupons);
         }
+    };
+
+    const bookAppointment = async (data, value) => {
+        getAvailableCoupons();
 
         if (value === 'member') {
             setFormData((preVal) => ({
@@ -329,13 +346,13 @@ const Home = () => {
                 Address: data[0].AddressLine1
             }))
 
-            setIsformOpen(true);
+            setDisplayCoupons(true);
         } else {
             setFormData((preVal) => ({
                 ...preVal, FullName: data.fullName, Gender: data.gender, DateofBirth: formatDate(data.dateofBirth), Age: calculateAge(data.dateofBirth),
             }))
 
-            setIsformOpen(true);
+            setDisplayCoupons(true);
         }
 
     };
@@ -343,7 +360,9 @@ const Home = () => {
     const goBackToLogin = () => {
         const isConfirmed = window.confirm("Are you sure, You want to close?");
         if (isConfirmed) {
-            navigate('/', {
+            sessionStorage.removeItem('memberId');
+            sessionStorage.removeItem('memberTime')
+            navigate('/verify', {
                 replace: true,
             });
         }
@@ -354,14 +373,14 @@ const Home = () => {
             <div className="d-flex flex-column justify-content-start align-items-center"
                 style={{ minHeight: '100vh', width: '100vw', backgroundColor: '#0E94C3' }}
             >
-                <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5"
+                <div className="card d-flex flex-column justify-content-start align-items-center p-3 py-5"
                     style={{
                         minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
                         minHeight: '100vh'
                     }}
                 >
                     <Checkmark size='medium' />
-                    <h5 className="text-black m-2 text-center fw-bold" style={{fontSize: '18px'}}>OHOINDIA MEMBERSHIP VERIFICATION SUCCESS !</h5>
+                    <h5 className="text-black m-2 text-center fw-bold" style={{ fontSize: '18px' }}>OHOINDIA MEMBERSHIP VERIFICATION SUCCESS !</h5>
 
                     {isDataFetched && (
                         <>
@@ -570,7 +589,7 @@ const Home = () => {
                                     {formErrors && formErrors.DateAndTime.length > 0 && <p className='text-danger m-0'>{formErrors.DateAndTime}</p>}
                                 </div>
 
-                                <div className="d-flex flex-column mb-3">
+                                {/* <div className="d-flex flex-column mb-3">
                                     <label className="form-control-label">
                                         Hospital Name<span className="text-danger"> *</span>
                                     </label>
@@ -586,7 +605,7 @@ const Home = () => {
                                     </label>
                                     <input type="text" name="Branch" className="form-control" placeholder="Enter Branch Name"
                                         value={formData.Branch} onChange={(e) => onChangeHandler(e)} />
-                                </div>
+                                </div> */}
 
                                 <div className="d-flex flex-column mb-3">
                                     <label className="form-control-label">Doctor Name</label>
@@ -652,7 +671,7 @@ const Home = () => {
                             <div className="text-center">
                                 <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
                                 <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
-                                <button type="submit" className="btn btn-success" style={{width: '80px', height: '40px'}}>
+                                <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
                                     {submitLoading ? (
                                         <div className="spinner-border text-white" role="status">
                                             {/* <span className="sr-only">Loading...</span> */}
@@ -666,6 +685,85 @@ const Home = () => {
                             {eligibilityMessage && eligibilityMessage.length > 0 && <p className='text-danger text-center'>{eligibilityMessage}</p>}
                         </form>
                     </div>
+                </div>
+            </div>
+        ) : displayCoupons ? (
+            <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
+                <div className="card d-flex flex-column align-items-center p-3 pb-5"
+                    style={{
+                        minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                        minHeight: '100vh'
+                    }}
+                >
+                    {hospitalName || hospitalImage ? (
+                        <div className="d-flex flex-column align-items-center mb-2 mt-5">
+                            {hospitalImage && (
+                                <img src={hospitalImage} alt="logo"
+                                    style={{ maxHeight: '100px', maxWidth: '100px' }}
+                                />
+                            )}
+
+                            {hospitalName && (
+                                <span className="app-brand-text fw-bolder text-center"
+                                    style={{ fontSize: '20px', color: '#041F60' }} >{hospitalName}</span>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="d-flex flex-column align-items-center mb-2 mt-5">
+                            <img src="/applogo.png" alt="logo"
+                                style={{ maxHeight: '60px', maxWidth: '60px' }}
+                            />
+                            <span className="app-brand-text fw-bolder"
+                                style={{ fontSize: '25px', color: '#041F60' }} >OHOINDIA</span>
+                        </div>
+                    )}
+
+                    <div className="align-self-start mx-5">
+                        <button type="button" className="text-primary border text-white rounded-pill p-1 px-2"
+                            style={{ backgroundColor: '#0E94C3' }}
+                            onClick={() => setDisplayCoupons(false)}
+                        >
+                            <FontAwesomeIcon icon={faArrowLeft} />
+                        </button>
+                    </div>
+
+                    <div className='m-3 d-flex flex-column align-items-center'>
+                        <h3 className='fw-bold'>Available Coupons</h3>
+
+                        <div className="card my-3" style={{ maxWidth: '550px' }}>
+                            <div className="row g-0">
+                                <div className="col-4">
+                                    <img src={`${process.env.PUBLIC_URL}/consultation.jpg`} className="img-fluid rounded"
+                                        alt="Hospital Consultation" style={{height: '100%'}}/>
+                                </div>
+                                <div className="col-8">
+                                    <div className="card-body d-flex flex-column">
+                                        <h5 className="card-title">Free Hospital Consultation</h5>
+                                        {availableCoupons && availableCoupons > 0 ? (
+                                            <p className="card-text">You have Maximum of {availableCoupons} coupons.</p>
+                                        ) : (
+                                            <p className="card-text">Sorry, You dont't have any coupons for this Hospital.</p>
+                                        )}
+                                        <button type='button' className='btn btn-warning align-self-end'
+                                            disabled={!availableCoupons || availableCoupons === 0}
+                                            onClick={() => setIsformOpen(true)}>
+                                            Claim Coupon</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="d-flex flex-column align-items-center mb-2 mt-auto">
+                        <img src="/applogo.png" alt="logo"
+                            style={{ height: '40px', width: '40px' }}
+                        />
+                        <span className="app-brand-text fw-bolder"
+                            style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                        <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
+                        <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                    </div>
+
                 </div>
             </div>
         ) : returnDetails()
