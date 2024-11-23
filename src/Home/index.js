@@ -376,7 +376,7 @@ const Home = () => {
                 <div className="card d-flex flex-column justify-content-start align-items-center p-3 py-5"
                     style={{
                         minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
-                        minHeight: '100vh'
+                        minHeight: '100vh', position: 'relative'
                     }}
                 >
                     <Checkmark size='medium' />
@@ -533,6 +533,36 @@ const Home = () => {
                             </div>
                         </>
                     )}
+
+                    <div
+                        style={{
+                            position: 'sticky',
+                            bottom: '30px',
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            width: '100%',
+                        }}
+                    >
+                        <button className='bg-danger'
+                            style={{
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: windowSize.width < 576 ? '50px' : '60px',
+                                height: windowSize.width < 576 ? '50px' : '60px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '16px',
+                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                zIndex: 1000, // Ensures it stays above the content
+                            }}
+                            onClick={() => goBackToLogin()}
+                        >
+                            Close
+                        </button>
+                    </div>
                 </div>
             </div>
         )
@@ -541,12 +571,43 @@ const Home = () => {
     return (
         isformOpen ? (
             <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
-                <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5"
+                <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-3"
                     style={{
                         minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
-                        minHeight: '100vh'
+                        minHeight: '100vh', position: 'relative'
                     }}
                 >
+                    <div
+                        style={{
+                            position: 'sticky',
+                            top: '30px',
+                            display: 'flex',
+                            justifyContent: 'flex-start',
+                            width: '100%',
+                        }}
+                    >
+                        <button
+                            style={{
+                                backgroundColor: '#0E94C3',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '40px',
+                                height: '40px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '16px',
+                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                zIndex: 1000, // Ensures it stays above the content
+                            }}
+                            onClick={handleCancel}
+                        >
+                            <FontAwesomeIcon icon={faArrowLeft} />
+                        </button>
+                    </div>
+
                     <div className="d-flex flex-row justify-content-start align-items-center mb-3">
                         <img src="/applogo.png" alt="logo" style={{ height: '50px', width: '50px' }} />
                         <span className="app-brand-text fw-bolder ms-2" style={{ fontSize: '30px', color: 'rgb(6, 31, 92)' }} >
@@ -554,16 +615,10 @@ const Home = () => {
                         </span>
                     </div>
                     <div className="p-3 text-start">
-                        <div className="d-flex flex-row align-items-center mb-3">
-                            <button type="button" className="text-primary border border-primary rounded-pill p-1 px-2"
-                                style={{ backgroundColor: 'transparent' }}
-                                onClick={handleCancel}
-                            >
-                                <FontAwesomeIcon icon={faArrowLeft} />
-                            </button>
-                        </div>
 
-                        <h4 className='mb-4 text-center'>{formData.FullName}</h4>
+                        <h4 className='mb-5 text-center'>Booking Consultation for <br />
+                            <span style={{color: '#0E94C3'}} className='fs-5 text-danger'>{formData.FullName}</span>
+                        </h4>
 
                         <form onSubmit={(e) => handleSubmit(e)}>
                             <div className='f-flex flex-column align-items-start' style={{ minWidth: '350px' }}>
@@ -692,11 +747,42 @@ const Home = () => {
                 <div className="card d-flex flex-column align-items-center p-3 pb-5"
                     style={{
                         minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
-                        minHeight: '100vh'
+                        minHeight: '100vh', position: 'relative'
                     }}
                 >
+                    <div
+                        style={{
+                            position: 'sticky',
+                            top: '30px',
+                            display: 'flex',
+                            justifyContent: 'flex-start',
+                            width: '100%',
+                        }}
+                    >
+                        <button
+                            style={{
+                                backgroundColor: '#0E94C3',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '40px',
+                                height: '40px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '16px',
+                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                zIndex: 1000, // Ensures it stays above the content
+                            }}
+                            onClick={() => setDisplayCoupons(false)}
+                        >
+                            <FontAwesomeIcon icon={faArrowLeft} />
+                        </button>
+                    </div>
+
                     {hospitalName || hospitalImage ? (
-                        <div className="d-flex flex-column align-items-center mb-2 mt-5">
+                        <div className="d-flex flex-column align-items-center mb-2 mt-3">
                             {hospitalImage && (
                                 <img src={hospitalImage} alt="logo"
                                     style={{ maxHeight: '100px', maxWidth: '100px' }}
@@ -718,15 +804,6 @@ const Home = () => {
                         </div>
                     )}
 
-                    <div className="align-self-start mx-5">
-                        <button type="button" className="text-primary border text-white rounded-pill p-1 px-2"
-                            style={{ backgroundColor: '#0E94C3' }}
-                            onClick={() => setDisplayCoupons(false)}
-                        >
-                            <FontAwesomeIcon icon={faArrowLeft} />
-                        </button>
-                    </div>
-
                     <div className='m-3 d-flex flex-column align-items-center'>
                         <h3 className='fw-bold'>Available Coupons</h3>
 
@@ -734,7 +811,7 @@ const Home = () => {
                             <div className="row g-0">
                                 <div className="col-4">
                                     <img src={`${process.env.PUBLIC_URL}/consultation.jpg`} className="img-fluid rounded"
-                                        alt="Hospital Consultation" style={{height: '100%'}}/>
+                                        alt="Hospital Consultation" style={{ height: '100%' }} />
                                 </div>
                                 <div className="col-8">
                                     <div className="card-body d-flex flex-column">
