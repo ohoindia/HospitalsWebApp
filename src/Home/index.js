@@ -7,6 +7,7 @@ import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../Login/input.css';
+import { format } from 'date-fns';
 
 const Home = () => {
     const [memberDetails, setMemberDetails] = useState();
@@ -234,8 +235,6 @@ const Home = () => {
 
         const noError = checkErrors();
 
-        console.log("noError: ", noError);
-
         if (noError) {
             const payload = {
                 name: formData.FullName,
@@ -259,8 +258,6 @@ const Home = () => {
             setSubmitLoading(true);
 
             const responseEligible = await fetchData(`BookingConsultation/bookAppointment/add`, { ...payload });
-
-            console.log("Response Eligibility: ", responseEligible, { ...payload });
 
             if (responseEligible.status) {
                 setFormSuccessMessage(responseEligible.message);
@@ -355,10 +352,15 @@ const Home = () => {
             setDisplayCoupons(true);
         }
 
+        const currDate = formateDatabaseDatetime(new Date());
+
+        setFormData(preVal => ({
+            ...preVal, DateAndTime: currDate
+        }))
     };
 
     const goBackToLogin = () => {
-        const isConfirmed = window.confirm("Are you sure, You want to close?");
+        const isConfirmed = window.confirm("Are you sure, You want to go back for Member Verification?");
         if (isConfirmed) {
             sessionStorage.removeItem('memberId');
             sessionStorage.removeItem('memberTime')
@@ -514,11 +516,11 @@ const Home = () => {
                             <p className='text-center fw-semibold mt-3'>Need any support ?</p>
                             <div className='d-flex flex-row mb-4' style={{ fontSize: '15px' }}>
                                 <span className='me-3'>
-                                    <i class="bi bi-telephone"></i>
+                                    <i className="bi bi-telephone"></i>
                                     +91 7671 997 108
                                 </span>
                                 <span className='ms-3'>
-                                    <i class="bi bi-telephone"></i>
+                                    <i className="bi bi-telephone"></i>
                                     +91 7032 107 108
                                 </span>
                             </div>
@@ -530,6 +532,8 @@ const Home = () => {
                                 <span className="app-brand-text fw-bolder"
                                     style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                                 <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                                <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
+                                    style={{ color: '#0E94C3'}}>Privacy Policy</a>
                             </div>
                         </>
                     )}
@@ -553,14 +557,14 @@ const Home = () => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '16px',
+                                fontSize: '14px',
                                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
                                 cursor: 'pointer',
                                 zIndex: 1000, // Ensures it stays above the content
                             }}
                             onClick={() => goBackToLogin()}
                         >
-                            Close
+                            <i className="bi bi-house-door me-1"></i> Home
                         </button>
                     </div>
                 </div>
@@ -614,6 +618,7 @@ const Home = () => {
                             OHOINDIA
                         </span>
                     </div>
+
                     <div className="p-3 text-start">
 
                         <h4 className='mb-5 text-center'>Booking Consultation for <br />
@@ -638,7 +643,7 @@ const Home = () => {
                                             enableTime: true,
                                             dateFormat: "Y-m-d H:i",
                                             time_24hr: false,
-                                            minDate: new Date()
+                                            minDate: format(new Date(), "yyyy-MM-dd")
                                         }}
                                     />
                                     {formErrors && formErrors.DateAndTime.length > 0 && <p className='text-danger m-0'>{formErrors.DateAndTime}</p>}
@@ -817,7 +822,7 @@ const Home = () => {
                                     <div className="card-body d-flex flex-column">
                                         <h5 className="card-title">Free Hospital Consultation</h5>
                                         {availableCoupons && availableCoupons > 0 ? (
-                                            <p className="card-text">You have Maximum of {availableCoupons} coupons.</p>
+                                            <p className="card-text">You have Maximum of <span className='fs-4 text-danger fw-bold'>{availableCoupons}</span> coupons.</p>
                                         ) : (
                                             <p className="card-text">Sorry, You dont't have any coupons for this Hospital.</p>
                                         )}
@@ -839,6 +844,8 @@ const Home = () => {
                             style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                        <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
+                            style={{ color: '#0E94C3'}}>Privacy Policy</a>
                     </div>
 
                 </div>
