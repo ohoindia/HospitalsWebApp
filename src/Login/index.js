@@ -376,6 +376,8 @@ const Login = () => {
                         <span className="app-brand-text fw-bolder"
                             style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
+                        <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
+                            style={{ color: '#0E94C3'}}>Privacy Policy</a>
                     </div>
                 </>
             ) : (
@@ -446,6 +448,8 @@ const Login = () => {
                             style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                        <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
+                            style={{ color: '#0E94C3'}}>Privacy Policy</a>
                     </div>
                 </>
             )}
@@ -626,6 +630,8 @@ const Login = () => {
                                         style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                                     <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                                     <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                                    <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
+                                        style={{ color: '#0E94C3'}}>Privacy Policy</a>
                                 </div>
 
                             </div>
