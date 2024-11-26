@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Checkmark } from 'react-checkmark'
+import { Checkmark } from 'react-checkmark';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { fetchAllData, fetchData } from '../Helpers/externapi';
@@ -32,6 +32,7 @@ const Home = () => {
     const [submitLoading, setSubmitLoading] = useState(false);
     const [availableCoupons, setAvailableCoupons] = useState();
     const [displayCoupons, setDisplayCoupons] = useState(false);
+    const [isBookingSuccess, setIsBookingSuccess] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -178,7 +179,7 @@ const Home = () => {
         const seconds = String(date.getSeconds()).padStart(2, '0');
 
         return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-    }
+    };
 
     const onChangeDateTime = (e) => {
         const dateStr = e.toString();
@@ -263,11 +264,11 @@ const Home = () => {
                 setFormSuccessMessage(responseEligible.message);
                 setEligibilityMessage('');
                 setSubmitLoading(false);
+                setIsBookingSuccess(true);
 
                 setFormErrors({
                     DateAndTime: '', ServiceType: '', Appointment: ''
                 });
-                getAvailableCoupons();
 
                 setTimeout(() => {
                     setFormData(preVal => ({
@@ -276,8 +277,12 @@ const Home = () => {
                     }));
 
                     setIsformOpen(false);
+                    setDisplayCoupons(false);
+                    setIsBookingSuccess(false);
                     setEligibilityMessage('');
                     setFormSuccessMessage('');
+
+                    getAvailableCoupons();
                 }, 3000);
             } else if (responseEligible.message) {
                 setEligibilityMessage(responseEligible.message);
@@ -533,7 +538,7 @@ const Home = () => {
                                     style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                                 <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                                 <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
-                                    style={{ color: '#0E94C3'}}>Privacy Policy</a>
+                                    style={{ color: '#0E94C3' }}>Privacy Policy</a>
                             </div>
                         </>
                     )}
@@ -547,24 +552,25 @@ const Home = () => {
                             width: '100%',
                         }}
                     >
-                        <button className='bg-danger'
+                        <button
                             style={{
                                 color: '#fff',
                                 border: 'none',
                                 borderRadius: '50%',
                                 width: windowSize.width < 576 ? '50px' : '60px',
                                 height: windowSize.width < 576 ? '50px' : '60px',
+                                backgroundColor: '#0E94C3',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '14px',
+                                fontSize: '28px',
                                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
                                 cursor: 'pointer',
                                 zIndex: 1000, // Ensures it stays above the content
                             }}
                             onClick={() => goBackToLogin()}
                         >
-                            <i className="bi bi-house-door me-1"></i> Home
+                            <i className="bi bi-house-door me-1"></i>
                         </button>
                     </div>
                 </div>
@@ -573,7 +579,20 @@ const Home = () => {
     };
 
     return (
-        isformOpen ? (
+        isBookingSuccess ? (
+            <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
+                <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-3"
+                    style={{
+                        minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                        minHeight: '100vh', position: 'relative'
+                    }}
+                >
+                    <Checkmark />
+
+                    {formSuccessMessage && formSuccessMessage.length > 0 && <p className='text-success text-center fs-5 p-3'>{formSuccessMessage}</p>}
+                </div>
+            </div>
+        ) : isformOpen ? (
             <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
                 <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-3"
                     style={{
@@ -612,17 +631,33 @@ const Home = () => {
                         </button>
                     </div>
 
-                    <div className="d-flex flex-row justify-content-start align-items-center mb-3">
-                        <img src="/applogo.png" alt="logo" style={{ height: '50px', width: '50px' }} />
-                        <span className="app-brand-text fw-bolder ms-2" style={{ fontSize: '30px', color: 'rgb(6, 31, 92)' }} >
-                            OHOINDIA
-                        </span>
-                    </div>
+                    {hospitalName || hospitalImage ? (
+                        <div className="d-flex flex-column align-items-center mb-2 mt-3">
+                            {hospitalImage && (
+                                <img src={hospitalImage} alt="logo"
+                                    style={{ maxHeight: '100px', maxWidth: '100px' }}
+                                />
+                            )}
+
+                            {hospitalName && (
+                                <span className="app-brand-text fw-bolder text-center"
+                                    style={{ fontSize: '20px', color: '#041F60' }} >{hospitalName}</span>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="d-flex flex-column align-items-center mb-2 mt-5">
+                            <img src="/applogo.png" alt="logo"
+                                style={{ maxHeight: '60px', maxWidth: '60px' }}
+                            />
+                            <span className="app-brand-text fw-bolder"
+                                style={{ fontSize: '25px', color: '#041F60' }} >OHOINDIA</span>
+                        </div>
+                    )}
 
                     <div className="p-3 text-start">
 
                         <h4 className='mb-5 text-center'>Booking Consultation for <br />
-                            <span style={{color: '#0E94C3'}} className='fs-5 text-danger'>{formData.FullName}</span>
+                            <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
                         </h4>
 
                         <form onSubmit={(e) => handleSubmit(e)}>
@@ -745,11 +780,23 @@ const Home = () => {
                             {eligibilityMessage && eligibilityMessage.length > 0 && <p className='text-danger text-center'>{eligibilityMessage}</p>}
                         </form>
                     </div>
+
+                    <div className="d-flex flex-column align-items-center mb-2 mt-auto">
+                        <img src="/applogo.png" alt="logo"
+                            style={{ height: '40px', width: '40px' }}
+                        />
+                        <span className="app-brand-text fw-bolder"
+                            style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                        <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
+                        <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                        <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
+                            style={{ color: '#0E94C3' }}>Privacy Policy</a>
+                    </div>
                 </div>
             </div>
         ) : displayCoupons ? (
             <div className="d-flex flex-column justify-content-start align-items-center" style={{ minHeight: '100vh', minWidth: '350px', backgroundColor: '#0E94C3' }}>
-                <div className="card d-flex flex-column align-items-center p-3 pb-5"
+                <div className="card d-flex flex-column align-items-center p-2 py-3 p-sm-3 pb-5"
                     style={{
                         minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
                         minHeight: '100vh', position: 'relative'
@@ -809,20 +856,20 @@ const Home = () => {
                         </div>
                     )}
 
-                    <div className='m-3 d-flex flex-column align-items-center'>
+                    <div className='my-3 m-sm-3 d-flex flex-column align-items-center'>
                         <h3 className='fw-bold'>Available Coupons</h3>
 
-                        <div className="card my-3" style={{ maxWidth: '550px' }}>
+                        <div className="card my-3" style={{ maxWidth: '550px', maxHeight: '300px' }}>
                             <div className="row g-0">
                                 <div className="col-4">
                                     <img src={`${process.env.PUBLIC_URL}/consultation.jpg`} className="img-fluid rounded"
                                         alt="Hospital Consultation" style={{ height: '100%' }} />
                                 </div>
                                 <div className="col-8">
-                                    <div className="card-body d-flex flex-column">
-                                        <h5 className="card-title">Free Hospital Consultation</h5>
+                                    <div className="p-1 p-sm-2 d-flex flex-column">
+                                        <h5 className="">Free Consultation</h5>
                                         {availableCoupons && availableCoupons > 0 ? (
-                                            <p className="card-text">You have Maximum of <span className='fs-4 text-danger fw-bold'>{availableCoupons}</span> coupons.</p>
+                                            <p className="card-text m-0">You have Maximum of <span className='fs-4 text-danger fw-bold'>{availableCoupons}</span> coupons.</p>
                                         ) : (
                                             <p className="card-text">Sorry, You dont't have any coupons for this Hospital.</p>
                                         )}
@@ -845,7 +892,7 @@ const Home = () => {
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                         <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
-                            style={{ color: '#0E94C3'}}>Privacy Policy</a>
+                            style={{ color: '#0E94C3' }}>Privacy Policy</a>
                     </div>
 
                 </div>
