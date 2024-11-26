@@ -15,10 +15,9 @@ const Home = () => {
     const [isformOpen, setIsformOpen] = useState(false);
     const [formData, setFormData] = useState({
         FullName: '', MobileNumber: '', Cardnumber: '', Gender: '', DateofBirth: '', Age: '', Address: '',
-        DateAndTime: '', DoctorName: '', ServiceType: '', Appointment: '', DiscountPercentage: 0.0,
-        ConsultationFee: 0
+        DateAndTime: '', DoctorName: '', ServiceType: ''
     });
-    const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: '', Appointment: '' });
+    const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: ''});
     const [eligibilityMessage, setEligibilityMessage] = useState();
     const [formSuccessMessage, setFormSuccessMessage] = useState();
     const [isDiscountedPercentVisible, setIsDiscountedPercentVisible] = useState(false);
@@ -126,17 +125,18 @@ const Home = () => {
 
     const onChangeHandler = (e) => {
 
-        if (e.target.name === 'Appointment') {
-            if (e.target.id === 'DiscountedConsultation' || e.target.id === 'DiscountedPharmacy' || e.target.id === 'DiscountedInvestigation') {
-                setIsDiscountedPercentVisible(true);
-            } else {
-                setIsDiscountedPercentVisible(false);
-            }
+        // if (e.target.name === 'Appointment') {
+        //     if (e.target.id === 'DiscountedConsultation' || e.target.id === 'DiscountedPharmacy' || e.target.id === 'DiscountedInvestigation') {
+        //         setIsDiscountedPercentVisible(true);
+        //     } else {
+        //         setIsDiscountedPercentVisible(false);
+        //     }
 
-            setFormData(preVal => ({
-                ...preVal, [e.target.name]: e.target.id
-            }))
-        } else if (e.target.name === 'FullName') {
+        //     setFormData(preVal => ({
+        //         ...preVal, [e.target.name]: e.target.id
+        //     }))
+        // } else 
+        if (e.target.name === 'FullName') {
             memberDetails[0].FullName === e.target.value ? (
                 setFormData((preVal) => ({
                     ...preVal, FullName: memberDetails[0].FullName, MobileNumber: memberDetails[0].MobileNumber, Cardnumber: memberDetails[0].OHOCardNumber,
@@ -221,11 +221,11 @@ const Home = () => {
                     ...preVal, ServiceType: 'Please Enter servicetype *'
                 }))
             }
-            if (formData.Appointment === '') {
-                setFormErrors(preVal => ({
-                    ...preVal, Appointment: 'Please select appoointment type *'
-                }))
-            }
+            // if (formData.Appointment === '') {
+            //     setFormErrors(preVal => ({
+            //         ...preVal, Appointment: 'Please select appoointment type *'
+            //     }))
+            // }
         } else {
             return true;
         }
@@ -249,11 +249,8 @@ const Home = () => {
                 hospitalName: hospitalName,
                 hospitalId: hospitalId,
                 serviceType: formData.ServiceType,
-                consultationFee: formData.ConsultationFee === '' ? 0 : formData.ConsultationFee,
                 memberId: memberId,
-                doctorName: formData.DoctorName,
-                discountinPercentage: formData.DiscountPercentage === '' ? 0.0 : formData.DiscountPercentage,
-                appointment: formData.Appointment
+                doctorName: formData.DoctorName
             }
 
             setSubmitLoading(true);
@@ -267,13 +264,12 @@ const Home = () => {
                 setIsBookingSuccess(true);
 
                 setFormErrors({
-                    DateAndTime: '', ServiceType: '', Appointment: ''
+                    DateAndTime: '', ServiceType: ''
                 });
 
                 setTimeout(() => {
                     setFormData(preVal => ({
-                        ...preVal, DateAndTime: '', DoctorName: '', ServiceType: '', Appointment: '',
-                        DiscountPercentage: 0.0, ConsultationFee: 0
+                        ...preVal, DateAndTime: '', DoctorName: '', ServiceType: ''
                     }));
 
                     setIsformOpen(false);
@@ -717,7 +713,7 @@ const Home = () => {
                                     {formErrors && formErrors.ServiceType.length > 0 && <p className='text-danger m-0'>{formErrors.ServiceType}</p>}
                                 </div>
 
-                                <div className="d-flex flex-column mb-3">
+                                {/* <div className="d-flex flex-column mb-3">
                                     <label className="form-control-label">
                                         Appointment<span className="text-danger"> *</span>
                                     </label>
@@ -744,7 +740,7 @@ const Home = () => {
                                         </div>
                                     </div>
                                     {formErrors && formErrors.Appointment.length > 0 && <p className='text-danger m-0'>{formErrors.Appointment}</p>}
-                                </div>
+                                </div> */}
 
                                 {isDiscountedPercentVisible && (
                                     <>
@@ -861,11 +857,11 @@ const Home = () => {
 
                         <div className="card my-3" style={{ maxWidth: '550px', maxHeight: '300px' }}>
                             <div className="row g-0">
-                                <div className="col-4">
+                                {/* <div className="col-4">
                                     <img src={`${process.env.PUBLIC_URL}/consultation.jpg`} className="img-fluid rounded"
                                         alt="Hospital Consultation" style={{ height: '100%' }} />
-                                </div>
-                                <div className="col-8">
+                                </div> */}
+                                <div className="col-12">
                                     <div className="p-1 p-sm-2 d-flex flex-column">
                                         <h5 className="">Free Consultation</h5>
                                         {availableCoupons && availableCoupons > 0 ? (
