@@ -40,6 +40,7 @@ const Home = () => {
     const hospitalName = sessionStorage.getItem('hospitalName');
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
     const [hospitalImage, setHospitalImage] = useState('');
+    const [serviceTypes, setServiceTYpes] = useState([]);
 
     // const memberId = 25587;
 
@@ -61,10 +62,8 @@ const Home = () => {
     useEffect(() => {
         const fetchMemberDetails = async () => {
             const responseMemberDetails = await fetchAllData(`OHOCards/GetMemberDetailsId/${memberId}`);
-
             setMemberDetails(responseMemberDetails);
             setIsDataFetched(true);
-
             responseMemberDetails && responseMemberDetails.length > 0 && (
                 setFormData((preVal) => ({
                     ...preVal, FullName: responseMemberDetails[0].FullName, MobileNumber: responseMemberDetails[0].MobileNumber, Cardnumber: responseMemberDetails[0].OHOCardNumber,
@@ -76,7 +75,6 @@ const Home = () => {
 
         const fetchDependents = async () => {
             const responseDependents = await fetchAllData(`MemberDependent/GetByMemberId/${memberId}`);
-
             setDependents(responseDependents);
         };
 
@@ -86,10 +84,15 @@ const Home = () => {
             setHospitalImage(imageUrl.ConfigValue + hospitalLogo);
         };
 
-        getMocUrl();
+        const fetchServiceTypes = async () => {
+            const getServiceTypes = await fetchData("HospitalServices/all", {skip: 0, take: 0});
+            setServiceTYpes(getServiceTypes);
+        }
 
+        getMocUrl();
         fetchMemberDetails();
         fetchDependents();
+        fetchServiceTypes();
     }, []);
 
     useEffect(() => {
@@ -155,6 +158,15 @@ const Home = () => {
                 ...preVal, [e.target.name]: e.target.value
             }))
 
+        } else if (e.target.name === 'ServiceType') {
+            setFormData(preVal => ({
+                ...preVal, [e.target.name]: parseInt(e.target.value)
+            }))
+            if (e.target.value.length > 0) {
+                setFormErrors(preVal => ({
+                    ...preVal, [e.target.name]: ''
+                }))
+            }
         } else {
             setFormData(preVal => ({
                 ...preVal, [e.target.name]: e.target.value
@@ -424,7 +436,8 @@ const Home = () => {
                                 >
                                     <div>
                                         <p className='m-0 fw-bold'>{memberDetails && memberDetails[0].FullName}</p>
-                                        <span>{memberDetails && memberDetails[0].Gender} | Age: {memberDetails && calculateAge(memberDetails[0].DateofBirth)} years</span>
+                                        <span>{memberDetails && memberDetails[0].Gender} | {memberDetails && calculateAge(memberDetails[0].DateofBirth)} years | 
+                                            <span className='fw-bold' style={{color: '#0E94C3'}}> ( </span>Self<span className='fw-bold' style={{color: '#0E94C3'}}> ) </span></span>
                                     </div>
 
                                     <i className="bi bi-chevron-right fw-bolder"></i>
@@ -438,7 +451,8 @@ const Home = () => {
                                     >
                                         <div>
                                             <p className='m-0 fw-bold'>{each.fullName}</p>
-                                            <span>{each.gender} | Age: {calculateAge(each.dateofBirth)} years</span>
+                                            <span>{each.gender} | {calculateAge(each.dateofBirth)} years | 
+                                            <span className='fw-bold' style={{color: '#0E94C3'}}> ( </span>{each.relationship && each.relationship}<span className='fw-bold' style={{color: '#0E94C3'}}> ) </span></span>
                                         </div>
 
                                         <i className="bi bi-chevron-right fw-bolder"></i>
@@ -466,19 +480,18 @@ const Home = () => {
                                             style={{
                                                 position: "absolute", width: "100%", height: "100%",
                                                 backfaceVisibility: "hidden", borderRadius: "10px",
-                                                overflow: "hidden",
+                                                overflow: "hidden"
                                             }}
                                         >
                                             <img
                                                 src={"https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg"}
                                                 alt="Front side"
-                                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                style={{ width: "100%", height: "100%" }}
                                             />
                                             <p
                                                 style={{
-                                                    position: "absolute", bottom: "6px", left: "25px",
-                                                    color: "white", fontSize: "1.1rem", textShadow: "1px 1px 2px black",
-                                                    padding: "5px 10px", borderRadius: "5px",
+                                                    position: "absolute", bottom: "15px", left: "40px",
+                                                    color: "white", fontSize: "1.1rem"
                                                 }}
                                             >
                                                 {memberDetails && memberDetails[0].OHOCardNumber}
@@ -497,7 +510,7 @@ const Home = () => {
                                                     "https://ohoindia-mous.s3.ap-south-1.amazonaws.com/3b56a6e5-41ca-4049-a882-02a3d14e1d78.jpg"
                                                 }
                                                 alt="Back side"
-                                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                style={{ width: "100%", height: "100%" }}
                                             />
                                         </div>
                                     </div>
@@ -506,8 +519,8 @@ const Home = () => {
 
                             <hr />
 
-                            <div className='d-flex flex-row justify-content-center slign-items-center fw-semibold rounded'
-                                style={{ backgroundColor: '#e8ebe9', minWidth: '350px', cursor: 'pointer' }}
+                            <div className='d-flex flex-row justify-content-center align-items-center bg-success text-white fw-semibold rounded'
+                                style={{ backgroundColor: '#0E94C3', minWidth: '350px', minHeight: '30px', cursor: 'pointer' }}
                                 onClick={() => goBackToLogin()}
                             >
                                 <i className="bi bi-x-lg me-2"></i>
@@ -515,15 +528,15 @@ const Home = () => {
                             </div>
 
                             <p className='text-center fw-semibold mt-3'>Need any support ?</p>
-                            <div className='d-flex flex-row mb-4' style={{ fontSize: '15px' }}>
-                                <span className='me-3'>
+                            <div className='d-flex flex-row mb-4 fw-semibold' style={{ fontSize: '15px' }}>
+                                <a className='me-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
                                     <i className="bi bi-telephone"></i>
                                     +91 7671 997 108
-                                </span>
-                                <span className='ms-3'>
+                                </a>
+                                <a className='ms-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
                                     <i className="bi bi-telephone"></i>
                                     +91 7032 107 108
-                                </span>
+                                </a>
                             </div>
 
                             <div className="d-flex flex-column align-items-center mb-2">
@@ -652,7 +665,7 @@ const Home = () => {
 
                     <div className="p-3 text-start">
 
-                        <h4 className='mb-5 text-center'>Booking Consultation for <br />
+                        <h4 className='mb-5 text-center'>Free Booking Consultation for <br />
                             <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
                         </h4>
 
@@ -708,8 +721,15 @@ const Home = () => {
                                     <label className="form-control-label">
                                         Servive Type<span className="text-danger"> *</span>
                                     </label>
-                                    <input type="text" name="ServiceType" className="form-control" placeholder="Ex: Orthopedic"
-                                        value={formData.ServiceType} onChange={(e) => onChangeHandler(e)} />
+                                    {/* <input type="text" name="ServiceType" className="form-control" placeholder="Ex: Orthopedic"
+                                        value={formData.ServiceType} onChange={(e) => onChangeHandler(e)} /> */}
+                                    <select name="ServiceType" className="form-control" placeholder="Ex: Orthopedic"
+                                        value={formData.ServiceType} onChange={(e) => onChangeHandler(e)}>
+                                            <option>--- SELECT ---</option>
+                                            {serviceTypes && serviceTypes.length > 0 && serviceTypes.map(type => (
+                                                <option key={type.HospitalServicesId} value={type.HospitalServicesId}>{type.ServiceName}</option>
+                                            ))}
+                                    </select>
                                     {formErrors && formErrors.ServiceType.length > 0 && <p className='text-danger m-0'>{formErrors.ServiceType}</p>}
                                 </div>
 
