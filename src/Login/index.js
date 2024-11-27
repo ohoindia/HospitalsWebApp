@@ -570,14 +570,14 @@ const Login = () => {
                                                 <img
                                                     src={"https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg"}
                                                     alt="Front side"
-                                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                    style={{ width: "100%", height: "100%" }}
                                                 />
                                                 {/* Card Number Overlay */}
                                                 <p className='border border-3 border-danger'
                                                     style={{
-                                                        position: "absolute", bottom: "8px", left: "20px",
-                                                        color: "white", fontSize: "1.2rem", textShadow: "1px 1px 2px black",
-                                                        padding: "5px 10px", borderRadius: "5px",
+                                                        position: "absolute", bottom: "8px", left: "26px",
+                                                        color: "white", fontSize: "1.1rem",
+                                                        padding: "5px 10px", borderRadius: "5px"
                                                     }}
                                                 >
                                                     2804 XXXX XX29
@@ -597,7 +597,7 @@ const Login = () => {
                                                         "https://ohoindia-mous.s3.ap-south-1.amazonaws.com/3b56a6e5-41ca-4049-a882-02a3d14e1d78.jpg"
                                                     }
                                                     alt="Back side"
-                                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                    style={{ width: "100%", height: "100%"}}
                                                 />
                                             </div>
                                         </div>
