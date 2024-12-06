@@ -423,7 +423,7 @@ const Login = () => {
                         </div>
                     </div>
 
-                    <div className='d-flex flex-column justify-content-center'>
+                    <div className='d-flex flex-column justify-content-center mb-2'>
                         <button type="submit" className="btn btn-primary" onClick={(e) => handleVerify(e)}
                             disabled={disableVerify || verifyLoading} style={{ backgroundColor: '#0E94C3', minWidth: '320px', maxHeight: '38px' }}
                         >
