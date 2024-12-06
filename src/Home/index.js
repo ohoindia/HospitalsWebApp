@@ -87,7 +87,7 @@ const Home = () => {
         const fetchServiceTypes = async () => {
             const getServiceTypes = await fetchData("HospitalServices/all", {skip: 0, take: 0});
             setServiceTYpes(getServiceTypes);
-        }
+        };
 
         getMocUrl();
         fetchMemberDetails();
@@ -128,17 +128,6 @@ const Home = () => {
 
     const onChangeHandler = (e) => {
 
-        // if (e.target.name === 'Appointment') {
-        //     if (e.target.id === 'DiscountedConsultation' || e.target.id === 'DiscountedPharmacy' || e.target.id === 'DiscountedInvestigation') {
-        //         setIsDiscountedPercentVisible(true);
-        //     } else {
-        //         setIsDiscountedPercentVisible(false);
-        //     }
-
-        //     setFormData(preVal => ({
-        //         ...preVal, [e.target.name]: e.target.id
-        //     }))
-        // } else 
         if (e.target.name === 'FullName') {
             memberDetails[0].FullName === e.target.value ? (
                 setFormData((preVal) => ({
@@ -260,10 +249,10 @@ const Home = () => {
                 address: formData.Address,
                 hospitalName: hospitalName,
                 hospitalId: hospitalId,
-                serviceType: formData.ServiceType,
+                serviceTypeId: formData.ServiceType,
                 memberId: memberId,
                 doctorName: formData.DoctorName
-            }
+            };
 
             setSubmitLoading(true);
 
@@ -889,10 +878,11 @@ const Home = () => {
                                         ) : (
                                             <p className="card-text">Sorry, You dont't have any coupons for this Hospital.</p>
                                         )}
-                                        <button type='button' className='btn btn-warning align-self-end'
-                                            disabled={!availableCoupons || availableCoupons === 0}
+                                        <button type='button' className='btn btn-warning p-1 px-2 fw-semibold align-self-end mt-1'
+                                            disabled={!availableCoupons || availableCoupons === 0} style={{fontSize: '13px'}}
                                             onClick={() => setIsformOpen(true)}>
-                                            Claim Coupon</button>
+                                            Avail One Coupon <i className="bi bi-arrow-right"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
