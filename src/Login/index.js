@@ -28,10 +28,15 @@ const Login = () => {
     const [isFlipped, setIsFlipped] = useState(false);
     const hospitalName = sessionStorage.getItem('hospitalName');
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
+    const hospitalId = sessionStorage.getItem('hospitalId');
     const [hospitalImage, setHospitalImage] = useState('');
     const [remainingOtp, setRemainingOtp] = useState();
+    const [hosAppointments, setHosAppointments] = useState();
 
     const inputsRef = useRef([]);
+    const navigate = useNavigate();
+
+    console.log("APPS: ", hosAppointments);
 
     useEffect(() => {
         const getMocUrl = async () => {
@@ -41,6 +46,7 @@ const Login = () => {
         };
 
         getMocUrl();
+        fetchHospitalAppointments();
     }, []);
 
     useEffect(() => {
@@ -58,7 +64,37 @@ const Login = () => {
         };
     }, []);
 
-    const navigate = useNavigate();
+    useEffect(() => {
+        let timer;
+        if (isRunning && timeLeft > 0) {
+            timer = setInterval(() => {
+                setTimeLeft((prevTime) => prevTime - 1);
+            }, 1000);
+        } else if (timeLeft === 0) {
+            setIsRunning(false);
+            setResendOtp(false);
+            setOtp(new Array(6).fill(""));
+            setOtpError('');
+
+            if (mobileNumber.length >= 10) {
+                setDisableOtp(false);
+            }
+        }
+
+        return () => clearInterval(timer);
+    }, [isRunning, timeLeft]);
+    
+    const fetchHospitalAppointments = async () => {
+        try {
+            const getHosAppoinments = await fetchData('BookingConsultation/ConsultationListByHospitalId', {
+                skip: 0, take: 0, HospitalId: hospitalId
+            });
+
+            setHosAppointments(getHosAppoinments.data);
+        } catch (e) {
+            console.error('Error fetching BookingConsultation/ConsultationListByHospitalId: ', e);
+        }
+    };
 
     const handleChange = (value, index) => {
         if (!isNaN(value) && value.length <= 1) {
@@ -115,27 +151,7 @@ const Login = () => {
             const firstEmptyIndex = newOtp.findIndex((char) => char === "");
             inputsRef.current[firstEmptyIndex !== -1 ? firstEmptyIndex : 5].focus();
         }
-    };
-
-    useEffect(() => {
-        let timer;
-        if (isRunning && timeLeft > 0) {
-            timer = setInterval(() => {
-                setTimeLeft((prevTime) => prevTime - 1);
-            }, 1000);
-        } else if (timeLeft === 0) {
-            setIsRunning(false);
-            setResendOtp(false);
-            setOtp(new Array(6).fill(""));
-            setOtpError('');
-
-            if (mobileNumber.length >= 10) {
-                setDisableOtp(false);
-            }
-        }
-
-        return () => clearInterval(timer);
-    }, [isRunning, timeLeft]);
+    };    
 
     const handleOtpSent = async () => {
         if (cardNumber.length === 14) {
@@ -358,7 +374,7 @@ const Login = () => {
                                 </div>
                             ) : (<>
                                 RESEND OTP <i className="bi bi-chevron-right fw-bolder"></i></>
-                            )}                            
+                            )}
                         </button>
                         {numberError && numberError.length > 0 && (
                             <p className='text-danger'>{numberError}</p>
@@ -377,7 +393,7 @@ const Login = () => {
                             style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
-                            style={{ color: '#0E94C3'}}>Privacy Policy</a>
+                            style={{ color: '#0E94C3' }}>Privacy Policy</a>
                     </div>
                 </>
             ) : (
@@ -449,7 +465,7 @@ const Login = () => {
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                         <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
-                            style={{ color: '#0E94C3'}}>Privacy Policy</a>
+                            style={{ color: '#0E94C3' }}>Privacy Policy</a>
                     </div>
                 </>
             )}
@@ -465,9 +481,40 @@ const Login = () => {
                 <div className="card d-flex flex-column justify-content-center flex-grow-1 align-items-center p-3 pb-5"
                     style={{
                         minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
-                        minHeight: '100vh'
+                        minHeight: '100vh', position: 'relative'
                     }}
                 >
+                    <div
+                        style={{
+                            position: 'sticky',
+                            top: '20px',
+                            display: 'flex',
+                            justifyContent: 'flex-start',
+                            width: '100%',
+                        }}
+                    >
+                        <button
+                            style={{
+                                backgroundColor: '#0E94C3',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '30px',
+                                width: '150px',
+                                height: '40px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '16px',
+                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                                cursor: 'pointer',
+                                zIndex: 1000, // Ensures it stays above the content
+                            }}
+                            onClick={() => navigate('/customerslist')}
+                        >
+                            Customers List
+                        </button>
+                    </div>
+
                     {hospitalName || hospitalImage ? (
                         <div className="d-flex flex-column align-items-center mb-2 mt-5">
                             {hospitalImage && (
@@ -597,7 +644,7 @@ const Login = () => {
                                                         "https://ohoindia-mous.s3.ap-south-1.amazonaws.com/3b56a6e5-41ca-4049-a882-02a3d14e1d78.jpg"
                                                     }
                                                     alt="Back side"
-                                                    style={{ width: "100%", height: "100%"}}
+                                                    style={{ width: "100%", height: "100%" }}
                                                 />
                                             </div>
                                         </div>
@@ -631,13 +678,13 @@ const Login = () => {
                                     <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                                     <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                                     <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
-                                        style={{ color: '#0E94C3'}}>Privacy Policy</a>
+                                        style={{ color: '#0E94C3' }}>Privacy Policy</a>
                                 </div>
 
                             </div>
                         </div>
-
                     </form>
+                    
                 </div>
             )}
         </div>

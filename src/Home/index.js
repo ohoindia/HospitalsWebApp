@@ -8,6 +8,7 @@ import 'flatpickr/dist/flatpickr.min.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../Login/input.css';
 import { format } from 'date-fns';
+import { formatDate } from '../CommonFunctions/CommonFunctions';
 
 const Home = () => {
     const [memberDetails, setMemberDetails] = useState();
@@ -119,13 +120,6 @@ const Home = () => {
         }
 
         return age;
-    };
-
-    const formatDate = (dobString) => {
-        const date = new Date(dobString);
-        const options = { day: '2-digit', month: 'short', year: 'numeric' };
-
-        return date.toLocaleDateString('en-US', options);
     };
 
     const onChangeHandler = (e) => {
