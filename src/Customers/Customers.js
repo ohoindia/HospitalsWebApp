@@ -90,7 +90,7 @@ const Customers = () => {
                             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
                             marginLeft: '20px',
                             cursor: 'pointer',
-                            zIndex: 1000, // Ensures it stays above the content
+                            zIndex: 1000,
                         }}
                         onClick={() => navigate('/verify')}
                     >

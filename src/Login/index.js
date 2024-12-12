@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchData } from '../Helpers/externapi';
 import { useNavigate } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import './input.css';
 
 const Login = () => {
@@ -83,7 +85,7 @@ const Login = () => {
 
         return () => clearInterval(timer);
     }, [isRunning, timeLeft]);
-    
+
     const fetchHospitalAppointments = async () => {
         try {
             const getHosAppoinments = await fetchData('BookingConsultation/ConsultationListByHospitalId', {
@@ -151,7 +153,7 @@ const Login = () => {
             const firstEmptyIndex = newOtp.findIndex((char) => char === "");
             inputsRef.current[firstEmptyIndex !== -1 ? firstEmptyIndex : 5].focus();
         }
-    };    
+    };
 
     const handleOtpSent = async () => {
         if (cardNumber.length === 14) {
@@ -323,6 +325,14 @@ const Login = () => {
         }
     };
 
+    const backFromOtp = () => {
+        const isConfirmed = window.confirm("Are you sure, You want to go back for Member Verification?");
+        if (isConfirmed) {
+            setIsOtpSent(false);
+            setIsRunning(false);
+        }
+    };
+
     const returnOtp = () => (
         <div className="card d-flex flex-column justify-content-center align-items-center p-3 py-5"
             style={{
@@ -330,8 +340,39 @@ const Login = () => {
                 minHeight: '100vh'
             }}
         >
+            <div
+                style={{
+                    position: 'sticky',
+                    top: '20px',
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    width: '100%',
+                }}
+            >
+                <button
+                    style={{
+                        backgroundColor: '#0E94C3',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '30px',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '16px',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                        cursor: 'pointer',
+                        zIndex: 1000,
+                    }}
+                    onClick={() => backFromOtp()}
+                >
+                    <FontAwesomeIcon icon={faArrowLeft} />
+                </button>
+            </div>
+
             {hospitalName || hospitalImage ? (
-                <div className="d-flex flex-column align-items-center mb-2 mt-5">
+                <div className="d-flex flex-column align-items-center mb-2">
                     {hospitalImage && (
                         <img src={hospitalImage} alt="logo"
                             style={{ maxHeight: '100px', maxWidth: '100px' }}
@@ -365,7 +406,7 @@ const Login = () => {
                         </div>
                     </div>
 
-                    <div className='d-flex flex-column justify-content-center'>
+                    <div className='d-flex flex-column justify-content-center mb-2'>
                         <button type="submit" className="btn btn-primary" onClick={(e) => handleOtpSent(e)}
                             style={{ backgroundColor: '#0E94C3', minWidth: '320px', maxHeight: '38px' }}>
                             {otpLoading ? (
@@ -382,7 +423,7 @@ const Login = () => {
                     </div>
 
                     {remainingOtp && (
-                        <span className='text-center'>Maxium of {remainingOtp} times more left</span>
+                        <span className='text-center mb-3'>Maxium of {remainingOtp} times more left</span>
                     )}
 
                     <div className="d-flex flex-column align-items-center mt-auto mb-2">
@@ -684,7 +725,7 @@ const Login = () => {
                             </div>
                         </div>
                     </form>
-                    
+
                 </div>
             )}
         </div>
