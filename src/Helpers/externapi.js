@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseUrl = window.self.location.origin + "/Prod/apiLambda/"; //process.env.REACT_APP_BASEURL;
+const baseUrl = process.env.REACT_APP_BASEURL;
 
 const fetchData = async (urlPath, axiosBody) => {
     try {
