@@ -16,8 +16,6 @@ const Customers = () => {
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
     const navigate = useNavigate();
 
-    console.log("hosAppointments: ", hosAppointments);
-
     useEffect(() => {
         const handleResize = () => {
             setWindowSize({
@@ -73,6 +71,7 @@ const Customers = () => {
                         display: 'flex',
                         justifyContent: 'flex-start',
                         width: '100%',
+                        zIndex: 2
                     }}
                 >
                     <button
@@ -80,32 +79,30 @@ const Customers = () => {
                             backgroundColor: '#0E94C3',
                             color: '#fff',
                             border: 'none',
-                            borderRadius: '30px',
-                            width: '150px',
-                            height: '40px',
+                            borderRadius: '50px',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '12px',
                             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
                             marginLeft: '20px',
-                            cursor: 'pointer',
-                            zIndex: 1000,
+                            cursor: 'pointer'
                         }}
+                        className='fw-semibold p-2 px-3'
                         onClick={() => navigate('/verify')}
                     >
-                        Membership Verification
+                        <i className="bi bi-arrow-left me-1"></i> Back
                     </button>
                 </div>
 
                 {hospitalName || hospitalImage ? (
-                    <div className="d-flex flex-column align-items-center mb-2 sticky-top"
+                    <div className="d-flex flex-column align-items-center mb-2 sticky-top bg-white"
                         style={{
-                            minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%'
+                            minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '50%',
+                            zIndex: 1
                         }}
                     >
-                        {hospitalImage && (
-                            <img src={hospitalImage} alt="logo"
+                        {hospitalLogo && hospitalImage && (
+                            <img src={hospitalImage} alt=""
                                 style={{ maxHeight: '100px', maxWidth: '100px' }}
                             />
                         )}
@@ -137,14 +134,25 @@ const Customers = () => {
                         minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '75%'
                     }}
                 >
-                    {hosAppointments && hosAppointments.length > 0 && hosAppointments.map(app => (
+                    {hosAppointments && hosAppointments.length > 0 ? hosAppointments.map(app => (
                         <div className='d-flex flex-column shadow-sm p-2 px-3 mb-4'>
-                            <div className='d-flex flex-row justify-content-between'>
-                                <h6>{app.Name}</h6>
+                            <div className='d-flex flex-row justify-content-between align-items-center'>
+                                <div>
+                                    <h6 className='m-0'>{app.Name}</h6>
+                                    {app.ServiceName && app.ServiceName.length > 0 && (
+                                        <div className='d-flex flex-row justify-content-start align-items-center'>
+                                            <span className='me-1'>{app.ServiceName}</span>
+                                            {app.DoctorName && app.DoctorName.length > 0 && (
+                                                <span>(Dr. {app.DoctorName})</span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                                 <span>{formatDate(app.AppointmentDate)}</span>
                             </div>
+
                         </div>
-                    ))}
+                    )) : <span className='text-danger text-center fw-semibold fs-5'>No Customers till the date.</span>}
                 </div>
             </div>
         </div>

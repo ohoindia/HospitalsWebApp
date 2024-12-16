@@ -45,7 +45,6 @@ const Home = () => {
     const hospitalLogo = sessionStorage.getItem('hospitalImage');    
 
     // const memberId = 25587;
-    console.log("PREV Appp: ", previousAppointments);
 
     useEffect(() => {
         const handleResize = () => {
@@ -333,15 +332,12 @@ const Home = () => {
 
     const fetchPreviousAppointments = async (payload) => {
         const getPrevAppointments = await fetchData('BookingConsultation/CustomerConsultationListByHospitalId', {...payload});
-        console.log("getPrevAppointments: ", getPrevAppointments);
 
         setPreviousAppointments(getPrevAppointments.data);
     };
 
     const bookAppointment = async (data, value) => {
         getAvailableCoupons();
-
-        console.log("MEM: ", data);
 
         if (value === 'member') {
             setFormData((preVal) => ({
@@ -639,8 +635,8 @@ const Home = () => {
 
                     {hospitalName || hospitalImage ? (
                         <div className="d-flex flex-column align-items-center mb-2 mt-3">
-                            {hospitalImage && (
-                                <img src={hospitalImage} alt="logo"
+                            {hospitalLogo && hospitalImage && (
+                                <img src={hospitalImage} alt=""
                                     style={{ maxHeight: '100px', maxWidth: '100px' }}
                                 />
                             )}
@@ -851,8 +847,8 @@ const Home = () => {
 
                     {hospitalName || hospitalImage ? (
                         <div className="d-flex flex-column align-items-center mb-2 mt-3">
-                            {hospitalImage && (
-                                <img src={hospitalImage} alt="logo"
+                            {hospitalLogo && hospitalImage && (
+                                <img src={hospitalImage} alt=""
                                     style={{ maxHeight: '100px', maxWidth: '100px' }}
                                 />
                             )}

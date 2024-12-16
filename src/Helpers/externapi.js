@@ -18,7 +18,7 @@ const fetchData = async (urlPath, axiosBody) => {
         return response.data;
 
     } catch (error) {
-        console.log('Error while fetching data ', error);
+        console.error('Error while fetching data ', error);
         return;
     }
 
@@ -39,7 +39,7 @@ const fetchAllData = async (urlPath) => {
         return response.data;
 
     } catch (error) {
-        console.log('Error while fetching data ', urlPath);
+        console.error('Error while fetching data ', urlPath);
         return;
     }
 
@@ -61,7 +61,7 @@ const fetchUpdateData = async (urlPath, axiosBody) => {
         return response.data;
 
     } catch (error) {
-        console.log('Error while fetching data ', error);
+        console.error('Error while fetching data ', error);
         return;
     }
 
@@ -82,7 +82,7 @@ const fetchDeleteData = async (urlPath, axiosBody) => {
         return response.data;
 
     } catch (error) {
-        console.log('Error while fetching data ', error);
+        console.error('Error while fetching data ', error);
         return;
     }
 

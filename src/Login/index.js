@@ -8,7 +8,6 @@ import './input.css';
 const Login = () => {
     const [mobileNumber, setMobileNumber] = useState('');
     const [cardNumber, setCardNumber] = useState('');
-    // const [otp, setOtp] = useState();
     const [disableOtp, setDisableOtp] = useState(true);
     const [disableVerify, setDisableVerify] = useState(true);
     const [timeLeft, setTimeLeft] = useState(120);
@@ -33,12 +32,9 @@ const Login = () => {
     const hospitalId = sessionStorage.getItem('hospitalId');
     const [hospitalImage, setHospitalImage] = useState('');
     const [remainingOtp, setRemainingOtp] = useState();
-    const [hosAppointments, setHosAppointments] = useState();
 
     const inputsRef = useRef([]);
     const navigate = useNavigate();
-
-    console.log("APPS: ", hosAppointments);
 
     useEffect(() => {
         const getMocUrl = async () => {
@@ -48,7 +44,6 @@ const Login = () => {
         };
 
         getMocUrl();
-        fetchHospitalAppointments();
     }, []);
 
     useEffect(() => {
@@ -85,18 +80,6 @@ const Login = () => {
 
         return () => clearInterval(timer);
     }, [isRunning, timeLeft]);
-
-    const fetchHospitalAppointments = async () => {
-        try {
-            const getHosAppoinments = await fetchData('BookingConsultation/ConsultationListByHospitalId', {
-                skip: 0, take: 0, HospitalId: hospitalId
-            });
-
-            setHosAppointments(getHosAppoinments.data);
-        } catch (e) {
-            console.error('Error fetching BookingConsultation/ConsultationListByHospitalId: ', e);
-        }
-    };
 
     const handleChange = (value, index) => {
         if (!isNaN(value) && value.length <= 1) {
@@ -373,8 +356,8 @@ const Login = () => {
 
             {hospitalName || hospitalImage ? (
                 <div className="d-flex flex-column align-items-center mb-2">
-                    {hospitalImage && (
-                        <img src={hospitalImage} alt="logo"
+                    {hospitalLogo && hospitalImage && (
+                        <img src={hospitalImage} alt=""
                             style={{ maxHeight: '100px', maxWidth: '100px' }}
                         />
                     )}
@@ -558,8 +541,8 @@ const Login = () => {
 
                     {hospitalName || hospitalImage ? (
                         <div className="d-flex flex-column align-items-center mb-2 mt-5">
-                            {hospitalImage && (
-                                <img src={hospitalImage} alt="logo"
+                            {hospitalLogo && hospitalImage && (
+                                <img src={hospitalImage} alt=""
                                     style={{ maxHeight: '100px', maxWidth: '100px' }}
                                 />
                             )}
