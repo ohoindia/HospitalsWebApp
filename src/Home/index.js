@@ -8,6 +8,7 @@ import 'flatpickr/dist/flatpickr.min.css';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../Login/input.css';
 import { format } from 'date-fns';
+import { formatDate } from '../CommonFunctions/CommonFunctions';
 
 const Home = () => {
     const [memberDetails, setMemberDetails] = useState();
@@ -32,17 +33,19 @@ const Home = () => {
     const [availableCoupons, setAvailableCoupons] = useState();
     const [displayCoupons, setDisplayCoupons] = useState(false);
     const [isBookingSuccess, setIsBookingSuccess] = useState(false);
+    const [hospitalImage, setHospitalImage] = useState('');
+    const [serviceTypes, setServiceTYpes] = useState([]);    
+    const [previousAppointments, setPreviousAppointments] = useState();
 
     const navigate = useNavigate();
     const location = useLocation();
     const memberId = sessionStorage.getItem('memberId');
     const hospitalId = sessionStorage.getItem('hospitalId');
     const hospitalName = sessionStorage.getItem('hospitalName');
-    const hospitalLogo = sessionStorage.getItem('hospitalImage');
-    const [hospitalImage, setHospitalImage] = useState('');
-    const [serviceTypes, setServiceTYpes] = useState([]);
+    const hospitalLogo = sessionStorage.getItem('hospitalImage');    
 
     // const memberId = 25587;
+    console.log("PREV Appp: ", previousAppointments);
 
     useEffect(() => {
         const handleResize = () => {
@@ -117,13 +120,6 @@ const Home = () => {
         }
 
         return age;
-    };
-
-    const formatDate = (dobString) => {
-        const date = new Date(dobString);
-        const options = { day: '2-digit', month: 'short', year: 'numeric' };
-
-        return date.toLocaleDateString('en-US', options);
     };
 
     const onChangeHandler = (e) => {
@@ -335,8 +331,17 @@ const Home = () => {
         }
     };
 
+    const fetchPreviousAppointments = async (payload) => {
+        const getPrevAppointments = await fetchData('BookingConsultation/CustomerConsultationListByHospitalId', {...payload});
+        console.log("getPrevAppointments: ", getPrevAppointments);
+
+        setPreviousAppointments(getPrevAppointments.data);
+    };
+
     const bookAppointment = async (data, value) => {
         getAvailableCoupons();
+
+        console.log("MEM: ", data);
 
         if (value === 'member') {
             setFormData((preVal) => ({
@@ -344,6 +349,9 @@ const Home = () => {
                 Gender: data[0].Gender, DateofBirth: formatDate(data[0].DateofBirth), Age: calculateAge(data[0].DateofBirth),
                 Address: data[0].AddressLine1
             }))
+
+            await fetchPreviousAppointments({ "skip":0, "take":0, "HospitalId":hospitalId,
+                "MemberDependentId": 0, "MemberId": data[0].CardPurchasedMemberId})
 
             setDisplayCoupons(true);
         } else {
@@ -832,7 +840,10 @@ const Home = () => {
                                 cursor: 'pointer',
                                 zIndex: 1000, // Ensures it stays above the content
                             }}
-                            onClick={() => setDisplayCoupons(false)}
+                            onClick={() => {
+                                setDisplayCoupons(false);
+                                setPreviousAppointments();
+                            }}
                         >
                             <FontAwesomeIcon icon={faArrowLeft} />
                         </button>
@@ -887,7 +898,22 @@ const Home = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+
+                        
+
+                    </div>                    
+                    
+                    {previousAppointments && previousAppointments.length > 0 && (
+                        <div className='d-flex flex-column my-3 mb-4'>
+                            <h5 className='w-semibold mb-2'>Previous Appointments</h5>
+                            {previousAppointments.map(app => (
+                                <div className='d-flex flex-row justify-content-between align-items-center mb-1' key={app.AppointmentDate}>
+                                    <span className='me-5'>{app.Name}</span>
+                                    <span>{formatDate(app.AppointmentDate)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}                    
 
                     <div className="d-flex flex-column align-items-center mb-2 mt-auto">
                         <img src="/applogo.png" alt="logo"
