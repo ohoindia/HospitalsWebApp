@@ -4,8 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import './input.css';
+import { useSelector, useDispatch } from 'react-redux';
+import { setConfigValue, setHospitalImage } from '../ReduxFunctions/ReduxSlice';
 
 const Login = () => {
+    const configValues = useSelector((state) => state.configValues);
+    const hospitalImage = useSelector((state) => state.hospitalImage);
+    const dispatch = useDispatch();
+
     const [mobileNumber, setMobileNumber] = useState('');
     const [cardNumber, setCardNumber] = useState('');
     const [disableOtp, setDisableOtp] = useState(true);
@@ -16,8 +22,6 @@ const Login = () => {
     const [otpError, setOtpError] = useState('');
     const [isOtpSent, setIsOtpSent] = useState(false);
     const [guid, setGuid] = useState();
-    const [isVerified, setIsVerified] = useState(false);
-    const [memberId, setMemberId] = useState();
     const [otp, setOtp] = useState(new Array(6).fill(""));
     const [otpLoading, setOtpLoading] = useState(false);
     const [verifyLoading, setVerifyLoading] = useState(false);
@@ -30,21 +34,21 @@ const Login = () => {
     const hospitalName = sessionStorage.getItem('hospitalName');
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
     const hospitalId = sessionStorage.getItem('hospitalId');
-    const [hospitalImage, setHospitalImage] = useState('');
     const [remainingOtp, setRemainingOtp] = useState();
 
     const inputsRef = useRef([]);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const getMocUrl = async () => {
-            const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
-            const imageUrl = response && response.length > 0 && response.find(val => val.ConfigKey === "hospitalImagesURL");
-            setHospitalImage(imageUrl.ConfigValue + hospitalLogo);
-        };
-
-        getMocUrl();
-    }, []);
+        if (!configValues.length > 0) {
+            getConfigValues();
+        } else {
+            if (!hospitalImage.length > 0) {
+                const imageUrl = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "hospitalImagesURL");
+                dispatch(setHospitalImage(imageUrl.ConfigValue + hospitalLogo))
+            }            
+        }
+    }, [configValues, hospitalImage]);    
 
     useEffect(() => {
         const handleResize = () => {
@@ -80,6 +84,15 @@ const Login = () => {
 
         return () => clearInterval(timer);
     }, [isRunning, timeLeft]);
+
+    const getConfigValues = async () => {
+        try {
+            const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
+            dispatch(setConfigValue(response));
+        } catch (e) {
+            console.error('Error in ConfigValues/all: ', e);
+        }            
+    };
 
     const handleChange = (value, index) => {
         if (!isNaN(value) && value.length <= 1) {
@@ -218,8 +231,6 @@ const Login = () => {
                 const currentTime = new Date().getTime();
                 const expirationTime = currentTime + 10 * 60 * 1000;
 
-                setIsVerified(true);
-                setMemberId(verifyResponse.memberId);
                 setIsOtpSent(false);
                 setVerifyLoading(false);
                 sessionStorage.setItem('memberId', verifyResponse.memberId);
@@ -245,8 +256,6 @@ const Login = () => {
                 const currentTime = new Date().getTime();
                 const expirationTime = currentTime + 10 * 60 * 1000;
 
-                setIsVerified(true);
-                setMemberId(verifyResponse.memberId);
                 setIsOtpSent(false);
                 setVerifyLoading(false);
                 sessionStorage.setItem('memberId', verifyResponse.memberId);

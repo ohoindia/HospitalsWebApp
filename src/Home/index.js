@@ -9,19 +9,24 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import '../Login/input.css';
 import { format } from 'date-fns';
 import { formatDate } from '../CommonFunctions/CommonFunctions';
+import { useSelector, useDispatch } from 'react-redux';
+import { setConfigValue, setHospitalImage } from '../ReduxFunctions/ReduxSlice';
 
 const Home = () => {
+    const configValues = useSelector((state) => state.configValues);
+    const hospitalImage = useSelector((state) => state.hospitalImage);
+    const dispatch = useDispatch();
+
     const [memberDetails, setMemberDetails] = useState();
     const [dependents, setDependents] = useState();
     const [isformOpen, setIsformOpen] = useState(false);
     const [formData, setFormData] = useState({
-        FullName: '', MobileNumber: '', Cardnumber: '', Gender: '', DateofBirth: '', Age: '', Address: '',
-        DateAndTime: '', DoctorName: '', ServiceType: ''
+        FullName: '', MobileNumber: '', Cardnumber: '', Gender: '', DateofBirth: '', Age: '', Address: '', Appointment: '',
+        DateAndTime: '', DoctorName: '', ServiceType: null, MemberDependentId: null, LabPercentage: null, PharmacyPercentage: null
     });
-    const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: ''});
+    const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: '' });
     const [eligibilityMessage, setEligibilityMessage] = useState();
     const [formSuccessMessage, setFormSuccessMessage] = useState();
-    const [isDiscountedPercentVisible, setIsDiscountedPercentVisible] = useState(false);
     const [isValid, setIsValid] = useState(false);
     const [isDataFetched, setIsDataFetched] = useState(false);
     const [windowSize, setWindowSize] = useState({
@@ -33,18 +38,31 @@ const Home = () => {
     const [availableCoupons, setAvailableCoupons] = useState();
     const [displayCoupons, setDisplayCoupons] = useState(false);
     const [isBookingSuccess, setIsBookingSuccess] = useState(false);
-    const [hospitalImage, setHospitalImage] = useState('');
-    const [serviceTypes, setServiceTYpes] = useState([]);    
+    const [serviceTypes, setServiceTYpes] = useState([]);
     const [previousAppointments, setPreviousAppointments] = useState();
+    const [service, setService] = useState('');
 
     const navigate = useNavigate();
     const location = useLocation();
     const memberId = sessionStorage.getItem('memberId');
     const hospitalId = sessionStorage.getItem('hospitalId');
     const hospitalName = sessionStorage.getItem('hospitalName');
-    const hospitalLogo = sessionStorage.getItem('hospitalImage');    
+    const hospitalLogo = sessionStorage.getItem('hospitalImage');
 
     // const memberId = 25587;
+
+    console.log("Form Data: ", formData, service);
+
+    useEffect(() => {
+        if (!configValues.length > 0) {
+            getConfigValues();
+        } else {
+            if (!hospitalImage.length > 0) {
+                const imageUrl = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "hospitalImagesURL");
+                dispatch(setHospitalImage(imageUrl.ConfigValue + hospitalLogo))
+            }
+        }
+    }, [configValues, hospitalImage]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -80,18 +98,11 @@ const Home = () => {
             setDependents(responseDependents);
         };
 
-        const getMocUrl = async () => {
-            const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
-            const imageUrl = response && response.length > 0 && response.find(val => val.ConfigKey === "hospitalImagesURL");
-            setHospitalImage(imageUrl.ConfigValue + hospitalLogo);
-        };
-
         const fetchServiceTypes = async () => {
-            const getServiceTypes = await fetchData("HospitalServices/all", {skip: 0, take: 0});
+            const getServiceTypes = await fetchData("HospitalServices/all", { skip: 0, take: 0 });
             setServiceTYpes(getServiceTypes);
         };
 
-        getMocUrl();
         fetchMemberDetails();
         fetchDependents();
         fetchServiceTypes();
@@ -106,6 +117,15 @@ const Home = () => {
             setIsValid(parsedInputDate > today);
         }
     }, [memberDetails])
+
+    const getConfigValues = async () => {
+        try {
+            const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
+            dispatch(setConfigValue(response));
+        } catch (e) {
+            console.error('Error in ConfigValues/all: ', e);
+        }
+    };
 
     function calculateAge(dateOfBirth) {
         const dob = new Date(dateOfBirth);
@@ -151,6 +171,15 @@ const Home = () => {
                     ...preVal, [e.target.name]: ''
                 }))
             }
+        } else if (e.target.name === 'LabPercentage' || e.target.name === 'PharmacyPercentage') {
+
+            if (/^\d*$/.test(e.target.value)) {
+                if (e.target.value.length <= 3) {
+                    setFormData(preVal => ({
+                        ...preVal, [e.target.name]: parseInt(e.target.value)
+                    }))
+                }
+            }
         } else {
             setFormData(preVal => ({
                 ...preVal, [e.target.name]: e.target.value
@@ -194,34 +223,16 @@ const Home = () => {
     };
 
     const checkErrors = () => {
-        if (formData.DateAndTime === '' ||
-            formData.ServiceType.length < 2 || formData.Appointment === '') {
+        if (formData.DateAndTime === '') {
 
-            if (formData.DateAndTime === '') {
-                setFormErrors(preVal => ({
-                    ...preVal, DateAndTime: 'Please select appointment date & time *'
-                }))
-            }
-            // if (formData.HospitalName.length < 2) {
-            //     setFormErrors(preVal => ({
-            //         ...preVal, HospitalName: 'Please Enter valid hospital name *'
-            //     }))
-            // }
-            // if (formData.Branch.length < 2) {
-            //     setFormErrors(preVal => ({
-            //         ...preVal, Branch: 'Please Enter valid branch name *'
-            //     }))
-            // }
-            if (formData.ServiceType.length < 2) {
-                setFormErrors(preVal => ({
-                    ...preVal, ServiceType: 'Please Enter servicetype *'
-                }))
-            }
-            // if (formData.Appointment === '') {
-            //     setFormErrors(preVal => ({
-            //         ...preVal, Appointment: 'Please select appoointment type *'
-            //     }))
-            // }
+            setFormErrors(preVal => ({
+                ...preVal, DateAndTime: 'Please select appointment date & time *'
+            }))          
+        } else if (service === 'consultation' && formData.ServiceType.length < 2) {
+
+            setFormErrors(preVal => ({
+                ...preVal, ServiceType: 'Please Enter servicetype *'
+            }))
         } else {
             return true;
         }
@@ -246,7 +257,11 @@ const Home = () => {
                 hospitalId: hospitalId,
                 serviceTypeId: formData.ServiceType,
                 memberId: memberId,
-                doctorName: formData.DoctorName
+                memberDependentId: formData.MemberDependentId,
+                doctorName: formData.DoctorName,
+                appointment: formData.Appointment,
+                labInvestigationPercentage: formData.LabPercentage,
+                pharmacyDiscountPercentage: formData.PharmacyPercentage
             };
 
             setSubmitLoading(true);
@@ -265,7 +280,7 @@ const Home = () => {
 
                 setTimeout(() => {
                     setFormData(preVal => ({
-                        ...preVal, DateAndTime: '', DoctorName: '', ServiceType: ''
+                        ...preVal, DateAndTime: '', DoctorName: '', ServiceType: null, LabPercentage: null, PharmacyPercentage: null
                     }));
 
                     setIsformOpen(false);
@@ -295,10 +310,17 @@ const Home = () => {
     const handleReset = (e) => {
         e.preventDefault();
 
-        setFormData(preVal => ({
-            ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: '', Appointment: '',
-            DiscountPercentage: 0.0, ConsultationFee: 0
-        }));
+        if (service === 'pharmacy') {
+            setFormData(preVal => ({
+                ...preVal, HospitalName: '', Branch: '', DoctorName: '', ServiceType: null, Appointment: '',
+                DiscountPercentage: 0.0, ConsultationFee: 0, LabPercentage: '', PharmacyPercentage: ''
+            }));
+        } else {
+            setFormData(preVal => ({
+                ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: null, Appointment: '',
+                DiscountPercentage: 0.0, ConsultationFee: 0, LabPercentage: '', PharmacyPercentage: ''
+            }));
+        }        
 
         setFormErrors({
             DateAndTime: '', HospitalName: '', Branch: '', ServiceType: '', Appointment: ''
@@ -307,8 +329,8 @@ const Home = () => {
 
     const handleCancel = () => {
         setFormData(preVal => ({
-            ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: '', Appointment: '',
-            DiscountPercentage: 0.0, ConsultationFee: 0
+            ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: null, Appointment: '',
+            DiscountPercentage: 0.0, ConsultationFee: 0, LabPercentage: null, PharmacyPercentage: null
         }));
         setFormErrors('');
         setIsformOpen(false);
@@ -331,7 +353,7 @@ const Home = () => {
     };
 
     const fetchPreviousAppointments = async (payload) => {
-        const getPrevAppointments = await fetchData('BookingConsultation/CustomerConsultationListByHospitalId', {...payload});
+        const getPrevAppointments = await fetchData('BookingConsultation/CustomerConsultationListByHospitalId', { ...payload });
 
         setPreviousAppointments(getPrevAppointments.data);
     };
@@ -343,16 +365,19 @@ const Home = () => {
             setFormData((preVal) => ({
                 ...preVal, FullName: data[0].FullName, MobileNumber: data[0].MobileNumber, Cardnumber: data[0].OHOCardNumber,
                 Gender: data[0].Gender, DateofBirth: formatDate(data[0].DateofBirth), Age: calculateAge(data[0].DateofBirth),
-                Address: data[0].AddressLine1
+                Address: data[0].AddressLine1, MemberDependentId: null
             }))
 
-            await fetchPreviousAppointments({ "skip":0, "take":0, "HospitalId":hospitalId,
-                "MemberDependentId": 0, "MemberId": data[0].CardPurchasedMemberId})
+            await fetchPreviousAppointments({
+                "skip": 0, "take": 0, "HospitalId": hospitalId,
+                "MemberDependentId": 0, "MemberId": data[0].CardPurchasedMemberId
+            })
 
             setDisplayCoupons(true);
         } else {
             setFormData((preVal) => ({
-                ...preVal, FullName: data.fullName, Gender: data.gender, DateofBirth: formatDate(data.dateofBirth), Age: calculateAge(data.dateofBirth),
+                ...preVal, FullName: data.fullName, Gender: data.gender, DateofBirth: formatDate(data.dateofBirth),
+                Age: calculateAge(data.dateofBirth), MemberDependentId: data.memberDependentId
             }))
 
             setDisplayCoupons(true);
@@ -374,6 +399,25 @@ const Home = () => {
                 replace: true,
             });
         }
+    };
+
+    const openForm = (service) => {
+        setIsformOpen(true);
+        setService(service);
+
+        if (service === 'consultation') {
+            setFormData(preVal => ({
+                ...preVal, DateAndTime: onChangeDateTime(new Date), Appointment: 'Free Consultation'
+            }))
+        } else if (service === 'lab') {
+            setFormData(preVal => ({
+                ...preVal, DateAndTime: onChangeDateTime(new Date), Appointment: 'Lab Investigation'
+            }))
+        } else {
+            setFormData(preVal => ({
+                ...preVal, DateAndTime: onChangeDateTime(new Date), Appointment: 'Pharmacy Discount'
+            }))
+        } 
     };
 
     const returnDetails = () => {
@@ -429,8 +473,8 @@ const Home = () => {
                                 >
                                     <div>
                                         <p className='m-0 fw-bold'>{memberDetails && memberDetails[0].FullName}</p>
-                                        <span>{memberDetails && memberDetails[0].Gender} | {memberDetails && calculateAge(memberDetails[0].DateofBirth)} years | 
-                                            <span className='fw-bold' style={{color: '#0E94C3'}}> ( </span>Self<span className='fw-bold' style={{color: '#0E94C3'}}> ) </span></span>
+                                        <span>{memberDetails && memberDetails[0].Gender} | {memberDetails && calculateAge(memberDetails[0].DateofBirth)} years |
+                                            <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>Self<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
                                     </div>
 
                                     <i className="bi bi-chevron-right fw-bolder"></i>
@@ -444,8 +488,8 @@ const Home = () => {
                                     >
                                         <div>
                                             <p className='m-0 fw-bold'>{each.fullName}</p>
-                                            <span>{each.gender} | {calculateAge(each.dateofBirth)} years | 
-                                            <span className='fw-bold' style={{color: '#0E94C3'}}> ( </span>{each.relationship && each.relationship}<span className='fw-bold' style={{color: '#0E94C3'}}> ) </span></span>
+                                            <span>{each.gender} | {calculateAge(each.dateofBirth)} years |
+                                                <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>{each.relationship && each.relationship}<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
                                         </div>
 
                                         <i className="bi bi-chevron-right fw-bolder"></i>
@@ -656,139 +700,162 @@ const Home = () => {
                         </div>
                     )}
 
-                    <div className="p-3 text-start">
+                    {service === 'consultation' ? (
+                        <div className="p-3 text-start">
+                            <h4 className='mb-5 text-center'>Free Booking Consultation for <br />
+                                <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
+                            </h4>
 
-                        <h4 className='mb-5 text-center'>Free Booking Consultation for <br />
-                            <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
-                        </h4>
+                            <form onSubmit={(e) => handleSubmit(e)}>
+                                <div className='f-flex flex-column align-items-start' style={{ minWidth: '350px' }}>
 
-                        <form onSubmit={(e) => handleSubmit(e)}>
-                            <div className='f-flex flex-column align-items-start' style={{ minWidth: '350px' }}>
+                                    <div className="d-flex flex-column mb-3">
+                                        <label htmlFor="flatpickr-datetime" className="form-control-label">
+                                            Consultation Date &amp; Time<span className="text-danger"> *</span>
+                                        </label>
+                                        <Flatpickr
+                                            className="form-control"
+                                            placeholder="YYYY-MM-DD HH:MM"
+                                            id="flatpickr-datetime"
+                                            name="DateAndTime"
+                                            value={formData.DateAndTime}
+                                            onChange={(e) => onChangeDateTime(e)}
+                                            options={{
+                                                enableTime: true,
+                                                dateFormat: "Y-m-d H:i",
+                                                time_24hr: false,
+                                                minDate: format(new Date(), "yyyy-MM-dd")
+                                            }}
+                                        />
+                                        {formErrors && formErrors.DateAndTime.length > 0 && <p className='text-danger m-0'>{formErrors.DateAndTime}</p>}
+                                    </div>
 
-                                <div className="d-flex flex-column mb-3">
-                                    <label htmlFor="flatpickr-datetime" className="form-control-label">
-                                        Consultation Date &amp; Time<span className="text-danger"> *</span>
-                                    </label>
-                                    <Flatpickr
-                                        className="form-control"
-                                        placeholder="YYYY-MM-DD HH:MM"
-                                        id="flatpickr-datetime"
-                                        name="DateAndTime"
-                                        value={formData.DateAndTime}
-                                        onChange={(e) => onChangeDateTime(e)}
-                                        options={{
-                                            enableTime: true,
-                                            dateFormat: "Y-m-d H:i",
-                                            time_24hr: false,
-                                            minDate: format(new Date(), "yyyy-MM-dd")
-                                        }}
-                                    />
-                                    {formErrors && formErrors.DateAndTime.length > 0 && <p className='text-danger m-0'>{formErrors.DateAndTime}</p>}
-                                </div>
+                                    <div className="d-flex flex-column mb-3">
+                                        <label className="form-control-label">Doctor Name</label>
+                                        <input type="text" name="DoctorName" className="form-control" placeholder="Enter Doctor Name"
+                                            value={formData.DoctorName} onChange={(e) => onChangeHandler(e)} />
+                                    </div>
 
-                                {/* <div className="d-flex flex-column mb-3">
-                                    <label className="form-control-label">
-                                        Hospital Name<span className="text-danger"> *</span>
-                                    </label>
-                                    <input type="text" name="HospitalName" className="form-control" placeholder="Enter Hospital Name"
-                                        value={formData.HospitalName} onChange={(e) => onChangeHandler(e)}
-                                    />
-                                    {formErrors && formErrors.HospitalName.length > 0 && <p className='text-danger m-0'>{formErrors.HospitalName}</p>}
-                                </div>
-
-                                <div className="d-flex flex-column mb-3">
-                                    <label className="form-control-label">
-                                        Branch
-                                    </label>
-                                    <input type="text" name="Branch" className="form-control" placeholder="Enter Branch Name"
-                                        value={formData.Branch} onChange={(e) => onChangeHandler(e)} />
-                                </div> */}
-
-                                <div className="d-flex flex-column mb-3">
-                                    <label className="form-control-label">Doctor Name</label>
-                                    <input type="text" name="DoctorName" className="form-control" placeholder="Enter Doctor Name"
-                                        value={formData.DoctorName} onChange={(e) => onChangeHandler(e)} />
-                                </div>
-
-                                <div className="d-flex flex-column mb-3">
-                                    <label className="form-control-label">
-                                        Servive Type<span className="text-danger"> *</span>
-                                    </label>
-                                    {/* <input type="text" name="ServiceType" className="form-control" placeholder="Ex: Orthopedic"
-                                        value={formData.ServiceType} onChange={(e) => onChangeHandler(e)} /> */}
-                                    <select name="ServiceType" className="form-control" placeholder="Ex: Orthopedic"
-                                        value={formData.ServiceType} onChange={(e) => onChangeHandler(e)}>
+                                    <div className="d-flex flex-column mb-3">
+                                        <label className="form-control-label">
+                                            Servive Type<span className="text-danger"> *</span>
+                                        </label>
+                                        <select name="ServiceType" className="form-control" placeholder="Ex: Orthopedic"
+                                            value={formData.ServiceType} onChange={(e) => onChangeHandler(e)}>
                                             <option>--- SELECT ---</option>
                                             {serviceTypes && serviceTypes.length > 0 && serviceTypes.map(type => (
                                                 <option key={type.HospitalServicesId} value={type.HospitalServicesId}>{type.ServiceName}</option>
                                             ))}
-                                    </select>
-                                    {formErrors && formErrors.ServiceType.length > 0 && <p className='text-danger m-0'>{formErrors.ServiceType}</p>}
-                                </div>
-
-                                {/* <div className="d-flex flex-column mb-3">
-                                    <label className="form-control-label">
-                                        Appointment<span className="text-danger"> *</span>
-                                    </label>
-                                    <div className="d-flex flex-column">
-                                        <div className="form-check me-3">
-                                            <input className="form-check-input" name="Appointment" type="radio" id="FreeConsultation"
-                                                checked={formData.Appointment === 'FreeConsultation'} onChange={(e) => onChangeHandler(e)} />
-                                            <label className="form-check-label" htmlFor="FreeConsultation">Free Consultation</label>
-                                        </div>
-                                        <div className="form-check me-3">
-                                            <input className="form-check-input" name="Appointment" type="radio" id="DiscountedConsultation"
-                                                checked={formData.Appointment === 'DiscountedConsultation'} onChange={(e) => onChangeHandler(e)} />
-                                            <label className="form-check-label" htmlFor="DiscountedConsultation">Discounted Consultation</label>
-                                        </div>
-                                        <div className="form-check me-3">
-                                            <input className="form-check-input" name="Appointment" type="radio" id="DiscountedPharmacy"
-                                                checked={formData.Appointment === 'DiscountedPharmacy'} onChange={(e) => onChangeHandler(e)} />
-                                            <label className="form-check-label" htmlFor="DiscountedPharmacy">Discounted Pharmacy</label>
-                                        </div>
-                                        <div className="form-check me-3">
-                                            <input className="form-check-input" name="Appointment" type="radio" id="DiscountedInvestigation"
-                                                checked={formData.Appointment === 'DiscountedInvestigation'} onChange={(e) => onChangeHandler(e)} />
-                                            <label className="form-check-label" htmlFor="DiscountedInvestigation">Discounted Investigation</label>
-                                        </div>
+                                        </select>
+                                        {formErrors && formErrors.ServiceType.length > 0 && <p className='text-danger m-0'>{formErrors.ServiceType}</p>}
                                     </div>
-                                    {formErrors && formErrors.Appointment.length > 0 && <p className='text-danger m-0'>{formErrors.Appointment}</p>}
-                                </div> */}
 
-                                {isDiscountedPercentVisible && (
-                                    <>
-                                        <div className="d-flex flex-column mb-3">
-                                            <label className="form-control-label">Discount Percentage %</label>
-                                            <input type="number" min="0" max="100" name="DiscountPercentage" className="form-control"
-                                                placeholder="Enter Discount percentage" value={formData.DiscountPercentage} onChange={(e) => onChangeHandler(e)} />
-                                        </div>
+                                </div>
+                                <div className="text-center">
+                                    <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
+                                    <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
+                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
+                                        {submitLoading ? (
+                                            <div className="spinner-border text-white" role="status">
+                                                {/* <span className="sr-only">Loading...</span> */}
+                                            </div>
+                                        ) : (
+                                            'Submit'
+                                        )}
+                                    </button>
+                                </div>
+                                {formSuccessMessage && formSuccessMessage.length > 0 && <p className='text-success text-center'>{formSuccessMessage}</p>}
+                                {eligibilityMessage && eligibilityMessage.length > 0 && <p className='text-danger text-center'>{eligibilityMessage}</p>}
+                            </form>
+                        </div>
+                    ) : service === 'lab' ? (
+                        <div className="p-3 text-start">
+                            <h4 className='mb-5 text-center'>Booking Lab Investigation for <br />
+                                <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
+                            </h4>
 
-                                        <div className="d-flex flex-column mb-3">
-                                            <label className="form-control-label">Consultation Fee (Rs)</label>
-                                            <input type="number" min="0" max="100000" name="ConsultationFee" className="form-control"
-                                                placeholder="Enter Consultation Fee" value={formData.ConsultationFee} onChange={(e) => onChangeHandler(e)} />
-                                        </div>
-                                    </>
-                                )}
+                            <form onSubmit={(e) => handleSubmit(e)}>
+                                <div className='f-flex flex-column align-items-start' style={{ minWidth: '350px' }}>
 
-                            </div>
-                            <div className="text-center">
-                                <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
-                                <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
-                                <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
-                                    {submitLoading ? (
-                                        <div className="spinner-border text-white" role="status">
-                                            {/* <span className="sr-only">Loading...</span> */}
-                                        </div>
-                                    ) : (
-                                        'Submit'
-                                    )}
-                                </button>
-                            </div>
-                            {formSuccessMessage && formSuccessMessage.length > 0 && <p className='text-success text-center'>{formSuccessMessage}</p>}
-                            {eligibilityMessage && eligibilityMessage.length > 0 && <p className='text-danger text-center'>{eligibilityMessage}</p>}
-                        </form>
-                    </div>
+                                    <div className="d-flex flex-column mb-3">
+                                        <label htmlFor="flatpickr-datetime" className="form-control-label">
+                                            Consultation Date &amp; Time<span className="text-danger"> *</span>
+                                        </label>
+                                        <Flatpickr
+                                            className="form-control"
+                                            placeholder="YYYY-MM-DD HH:MM"
+                                            id="flatpickr-datetime"
+                                            name="DateAndTime"
+                                            value={formData.DateAndTime}
+                                            onChange={(e) => onChangeDateTime(e)}
+                                            options={{
+                                                enableTime: true,
+                                                dateFormat: "Y-m-d H:i",
+                                                time_24hr: false,
+                                                minDate: format(new Date(), "yyyy-MM-dd")
+                                            }}
+                                        />
+                                        {formErrors && formErrors.DateAndTime.length > 0 && <p className='text-danger m-0'>{formErrors.DateAndTime}</p>}
+                                    </div>
+
+                                    <div className="d-flex flex-column mb-3">
+                                        <label className="form-control-label">Discount Percentage (<span className='text-danger'>%</span>)</label>
+                                        <input type="text" name="LabPercentage" className="form-control" placeholder="Enter Discount Percentage"
+                                            value={formData.LabPercentage} onChange={(e) => onChangeHandler(e)} />
+                                    </div>
+
+                                </div>
+                                <div className="text-center">
+                                    <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
+                                    <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
+                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
+                                        {submitLoading ? (
+                                            <div className="spinner-border text-white" role="status">
+                                                {/* <span className="sr-only">Loading...</span> */}
+                                            </div>
+                                        ) : (
+                                            'Submit'
+                                        )}
+                                    </button>
+                                </div>
+                                {formSuccessMessage && formSuccessMessage.length > 0 && <p className='text-success text-center'>{formSuccessMessage}</p>}
+                                {eligibilityMessage && eligibilityMessage.length > 0 && <p className='text-danger text-center'>{eligibilityMessage}</p>}
+                            </form>
+                        </div>
+                    ) : (
+                        <div className="p-3 text-start">
+                            <h4 className='mb-5 text-center'>Pharmacy Discount for <br />
+                                <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
+                            </h4>
+
+                            <form onSubmit={(e) => handleSubmit(e)}>
+                                <div className='f-flex flex-column align-items-start' style={{ minWidth: '350px' }}>
+
+                                    <div className="d-flex flex-column mb-3">
+                                        <label className="form-control-label">Discount Percentage (<span className='text-danger'>%</span>)</label>
+                                        <input type="text" name="PharmacyPercentage" className="form-control" placeholder="Enter Discount Percentage"
+                                            value={formData.PharmacyPercentage} onChange={(e) => onChangeHandler(e)} />
+                                    </div>
+
+                                </div>
+                                <div className="text-center">
+                                    <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
+                                    <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
+                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
+                                        {submitLoading ? (
+                                            <div className="spinner-border text-white" role="status">
+                                                {/* <span className="sr-only">Loading...</span> */}
+                                            </div>
+                                        ) : (
+                                            'Submit'
+                                        )}
+                                    </button>
+                                </div>
+                                {formSuccessMessage && formSuccessMessage.length > 0 && <p className='text-success text-center'>{formSuccessMessage}</p>}
+                                {eligibilityMessage && eligibilityMessage.length > 0 && <p className='text-danger text-center'>{eligibilityMessage}</p>}
+                            </form>
+                        </div>
+                    )}
 
                     <div className="d-flex flex-column align-items-center mb-2 mt-auto">
                         <img src="/applogo.png" alt="logo"
@@ -814,10 +881,11 @@ const Home = () => {
                     <div
                         style={{
                             position: 'sticky',
-                            top: '30px',
+                            top: '15px',
                             display: 'flex',
                             justifyContent: 'flex-start',
                             width: '100%',
+                            zIndex: 1
                         }}
                     >
                         <button
@@ -869,36 +937,71 @@ const Home = () => {
                     )}
 
                     <div className='my-3 m-sm-3 d-flex flex-column align-items-center'>
-                        <h3 className='fw-bold'>Available Coupons</h3>
+                        <h3 className='fw-bold mb-3'>Available Services</h3>
 
-                        <div className="card my-3" style={{ maxWidth: '550px', maxHeight: '300px' }}>
+                        <div className="card mb-3" style={{ minWidth: '350px', maxWidth: '350px', maxHeight: '300px' }}>
                             <div className="row g-0">
-                                {/* <div className="col-4">
-                                    <img src={`${process.env.PUBLIC_URL}/consultation.jpg`} className="img-fluid rounded"
-                                        alt="Hospital Consultation" style={{ height: '100%' }} />
-                                </div> */}
                                 <div className="col-12">
-                                    <div className="p-1 p-sm-2 d-flex flex-column">
-                                        <h5 className="">Free Consultation</h5>
+                                    <div className="p-2 d-flex flex-column">
+                                        <div className='d-flex flex-row justify-content-between align-items-center'>
+                                            <h5>Free Consultation</h5>
+                                            <button type='button' className='btn btn-warning p-1 px-2 fw-semibold align-self-end mt-1'
+                                                disabled={!availableCoupons || availableCoupons === 0} style={{ fontSize: '13px' }}
+                                                onClick={() => openForm('consultation')}>
+                                                Avail One Coupon <i className="bi bi-arrow-right"></i>
+                                            </button>
+                                        </div>
+
                                         {availableCoupons && availableCoupons > 0 ? (
                                             <p className="card-text m-0">You have Maximum of <span className='fs-4 text-danger fw-bold'>{availableCoupons}</span> coupons.</p>
                                         ) : (
                                             <p className="card-text">Sorry, You dont't have any coupons for this Hospital.</p>
                                         )}
-                                        <button type='button' className='btn btn-warning p-1 px-2 fw-semibold align-self-end mt-1'
-                                            disabled={!availableCoupons || availableCoupons === 0} style={{fontSize: '13px'}}
-                                            onClick={() => setIsformOpen(true)}>
-                                            Avail One Coupon <i className="bi bi-arrow-right"></i>
-                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        
+                        <div className="card mb-3" style={{ minWidth: '350px', maxWidth: '350px', maxHeight: '300px' }}>
+                            <div className="row g-0">
+                                <div className="col-12">
+                                    <div className="p-2 d-flex flex-column">
+                                        <div className='d-flex flex-row justify-content-between align-items-center'>
+                                            <h5>Lab Investigation</h5>
+                                            <button type='button' className='btn btn-warning p-1 px-2 fw-semibold align-self-end mt-1'
+                                                style={{ fontSize: '13px' }} onClick={() => openForm('lab')}
+                                            >
+                                                Book Now <i className="bi bi-arrow-right"></i>
+                                            </button>
+                                        </div>
 
-                    </div>                    
-                    
+                                        <p className="card-text m-0">Book a discounted Lab Investigation</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="card mb-3" style={{ minWidth: '350px', maxWidth: '350px', maxHeight: '300px' }}>
+                            <div className="row g-0">
+                                <div className="col-12">
+                                    <div className="p-2 d-flex flex-column">
+                                        <div className='d-flex flex-row justify-content-between align-items-center'>
+                                            <h5>Pharmacy Discount</h5>
+                                            <button type='button' className='btn btn-warning p-1 px-2 fw-semibold align-self-end mt-1'
+                                                style={{ fontSize: '13px' }} onClick={() => openForm('pharmacy')}
+                                            >
+                                                Claim Now <i className="bi bi-arrow-right"></i>
+                                            </button>
+                                        </div>
+
+                                        <p className="card-text">Claim discounts on Medicines</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
                     {previousAppointments && previousAppointments.length > 0 && (
                         <div className='d-flex flex-column my-3 mb-4'>
                             <h5 className='w-semibold mb-2'>Previous Appointments</h5>
@@ -909,7 +1012,7 @@ const Home = () => {
                                 </div>
                             ))}
                         </div>
-                    )}                    
+                    )}
 
                     <div className="d-flex flex-column align-items-center mb-2 mt-auto">
                         <img src="/applogo.png" alt="logo"
