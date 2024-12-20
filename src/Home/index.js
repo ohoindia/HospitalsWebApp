@@ -51,8 +51,6 @@ const Home = () => {
 
     // const memberId = 25587;
 
-    console.log("Form Data: ", formData, service);
-
     useEffect(() => {
         if (!configValues.length > 0) {
             getConfigValues();
