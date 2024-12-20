@@ -2,14 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { fetchData } from '../Helpers/externapi';
 import { formatDate } from '../CommonFunctions/CommonFunctions';
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { setConfigValue, setHospitalImage } from '../ReduxFunctions/ReduxSlice';
 
 const Customers = () => {
+    const configValues = useSelector((state) => state.configValues);
+    const hospitalImage = useSelector((state) => state.hospitalImage);
+    const dispatch = useDispatch();
+
     const [windowSize, setWindowSize] = useState({
         width: window.innerWidth,
         height: window.innerHeight,
     });
     const [hosAppointments, setHosAppointments] = useState();
-    const [hospitalImage, setHospitalImage] = useState('');
+    const [Loading, setLoading] = useState(true);
 
     const hospitalId = sessionStorage.getItem('hospitalId');
     const hospitalName = sessionStorage.getItem('hospitalName');
@@ -32,18 +38,32 @@ const Customers = () => {
     }, []);
 
     useEffect(() => {
-        const getMocUrl = async () => {
-            const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
-            const imageUrl = response && response.length > 0 && response.find(val => val.ConfigKey === "hospitalImagesURL");
-            setHospitalImage(imageUrl.ConfigValue + hospitalLogo);
-        };
-
-        getMocUrl();
         fetchHospitalAppointments();
     }, [])
 
+    useEffect(() => {
+        if (!configValues.length > 0) {
+            getConfigValues();
+        } else {
+            if (!hospitalImage.length > 0) {
+                const imageUrl = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "hospitalImagesURL");
+                dispatch(setHospitalImage(imageUrl.ConfigValue + hospitalLogo))
+            }
+        }
+    }, [configValues, hospitalImage]);
+
+    const getConfigValues = async () => {
+        try {
+            const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
+            dispatch(setConfigValue(response));
+        } catch (e) {
+            console.error('Error in ConfigValues/all: ', e);
+        }
+    };
+
     const fetchHospitalAppointments = async () => {
         try {
+            setLoading(true);
             const getHosAppoinments = await fetchData('BookingConsultation/ConsultationListByHospitalId', {
                 skip: 0, take: 0, HospitalId: hospitalId
             });
@@ -51,6 +71,8 @@ const Customers = () => {
             setHosAppointments(getHosAppoinments.data);
         } catch (e) {
             console.error('Error fetching BookingConsultation/ConsultationListByHospitalId: ', e);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -129,31 +151,39 @@ const Customers = () => {
                     </div>
                 )}
 
-                <div className='d-flex flex-column px-3 px-md-5 my-4'
-                    style={{
-                        minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '75%'
-                    }}
-                >
-                    {hosAppointments && hosAppointments.length > 0 ? hosAppointments.map(app => (
-                        <div className='d-flex flex-column shadow-sm p-2 px-3 mb-4'>
-                            <div className='d-flex flex-row justify-content-between align-items-center'>
-                                <div>
-                                    <h6 className='m-0'>{app.Name}</h6>
-                                    {app.ServiceName && app.ServiceName.length > 0 && (
-                                        <div className='d-flex flex-row justify-content-start align-items-center'>
-                                            <span className='me-1'>{app.ServiceName}</span>
-                                            {app.DoctorName && app.DoctorName.length > 0 && (
-                                                <span>(Dr. {app.DoctorName})</span>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                                <span>{formatDate(app.AppointmentDate)}</span>
-                            </div>
-
+                {Loading ? (
+                    <div className='d-flex flex-row justify-content-center pt-5'>
+                        <div class="spinner-border text-info" role="status">
+                            <span class="visually-hidden">Loading...</span>
                         </div>
-                    )) : <span className='text-danger text-center fw-semibold fs-5'>No Customers till the date.</span>}
-                </div>
+                    </div>
+                ) : (
+                    <div className='d-flex flex-column px-3 px-md-5 my-4'
+                        style={{
+                            minWidth: windowSize.width < 576 ? '100vw' : windowSize.width <= 992 ? '75%' : '75%'
+                        }}
+                    >
+                        {hosAppointments && hosAppointments.length > 0 ? hosAppointments.map(app => (
+                            <div className='d-flex flex-column shadow-sm p-2 px-3 mb-4'>
+                                <div className='d-flex flex-row justify-content-between align-items-center'>
+                                    <div>
+                                        <h6 className='m-0'>{app.Name}</h6>
+                                        {app.ServiceName && app.ServiceName.length > 0 && (
+                                            <div className='d-flex flex-row justify-content-start align-items-center'>
+                                                <span className='me-1'>{app.ServiceName}</span>
+                                                {app.DoctorName && app.DoctorName.length > 0 && (
+                                                    <span>(Dr. {app.DoctorName})</span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span>{formatDate(app.AppointmentDate)}</span>
+                                </div>
+
+                            </div>
+                        )) : <span className='text-danger text-center fw-semibold fs-5'>No Customers till the date.</span>}
+                    </div>
+                )}
             </div>
         </div>
     )
