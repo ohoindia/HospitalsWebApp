@@ -322,6 +322,10 @@ const Login = () => {
         if (isConfirmed) {
             setIsOtpSent(false);
             setIsRunning(false);
+            setOtp(new Array(6).fill(""));
+            setMobileNumber('');
+            setCardNumber('');
+            setDisableVerify(true);
         }
     };
 
