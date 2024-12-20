@@ -173,12 +173,11 @@ const Home = () => {
             }
         } else if (e.target.name === 'LabPercentage' || e.target.name === 'PharmacyPercentage') {
 
-            if (/^\d*$/.test(e.target.value)) {
-                if (e.target.value.length <= 3) {
-                    setFormData(preVal => ({
-                        ...preVal, [e.target.name]: parseInt(e.target.value)
-                    }))
-                }
+            if (/^\d*$/.test(e.target.value) && e.target.value.length <= 3) {
+                setFormData(prevVal => ({
+                    ...prevVal, 
+                    [e.target.name]: parseInt(e.target.value)
+                }));
             }
         } else {
             setFormData(preVal => ({
@@ -800,8 +799,12 @@ const Home = () => {
 
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Discount Percentage (<span className='text-danger'>%</span>)</label>
-                                        <input type="text" name="LabPercentage" className="form-control" placeholder="Enter Discount Percentage"
-                                            value={formData.LabPercentage} onChange={(e) => onChangeHandler(e)} />
+                                        <input type="number" name="LabPercentage" className="form-control" placeholder="Enter Discount Percentage"
+                                            value={formData.LabPercentage} min={0} max={100} onChange={(e) => onChangeHandler(e)} 
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                            }}
+                                        />
                                     </div>
 
                                 </div>
@@ -833,8 +836,12 @@ const Home = () => {
 
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Discount Percentage (<span className='text-danger'>%</span>)</label>
-                                        <input type="text" name="PharmacyPercentage" className="form-control" placeholder="Enter Discount Percentage"
-                                            value={formData.PharmacyPercentage} onChange={(e) => onChangeHandler(e)} />
+                                        <input type="number" name="PharmacyPercentage" className="form-control" placeholder="Enter Discount Percentage"
+                                            value={formData.PharmacyPercentage} min={0} max={100} onChange={(e) => onChangeHandler(e)} 
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                            }}
+                                        />
                                     </div>
 
                                 </div>
