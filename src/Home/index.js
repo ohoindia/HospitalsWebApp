@@ -22,7 +22,8 @@ const Home = () => {
     const [isformOpen, setIsformOpen] = useState(false);
     const [formData, setFormData] = useState({
         FullName: '', MobileNumber: '', Cardnumber: '', Gender: '', DateofBirth: '', Age: '', Address: '', Appointment: '',
-        DateAndTime: '', DoctorName: '', ServiceType: null, MemberDependentId: null, LabPercentage: null, PharmacyPercentage: null
+        DateAndTime: '', DoctorName: '', ServiceType: null, MemberDependentId: null, LabPercentage: null, PharmacyPercentage: null,
+        PaidAmount: '', TotalAmount: ''
     });
     const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: '' });
     const [eligibilityMessage, setEligibilityMessage] = useState();
@@ -225,7 +226,7 @@ const Home = () => {
             setFormErrors(preVal => ({
                 ...preVal, DateAndTime: 'Please select appointment date & time *'
             }))          
-        } else if (service === 'consultation' && formData.ServiceType.length < 2) {
+        } else if (service === 'consultation' && !formData.ServiceType || formData.ServiceType.length < 2) {
 
             setFormErrors(preVal => ({
                 ...preVal, ServiceType: 'Please Enter servicetype *'
@@ -258,7 +259,9 @@ const Home = () => {
                 doctorName: formData.DoctorName,
                 appointment: formData.Appointment,
                 labInvestigationPercentage: formData.LabPercentage,
-                pharmacyDiscountPercentage: formData.PharmacyPercentage
+                pharmacyDiscountPercentage: formData.PharmacyPercentage,
+                PaidAmount: formData.PaidAmount === '' ? 0 : formData.PaidAmount,
+                TotalAmount: formData.TotalAmount === '' ? 0 : formData.TotalAmount
             };
 
             setSubmitLoading(true);
@@ -277,7 +280,8 @@ const Home = () => {
 
                 setTimeout(() => {
                     setFormData(preVal => ({
-                        ...preVal, DateAndTime: '', DoctorName: '', ServiceType: null, LabPercentage: null, PharmacyPercentage: null
+                        ...preVal, DateAndTime: '', DoctorName: '', ServiceType: null, LabPercentage: null, PharmacyPercentage: null,
+                        PaidAmount: '', TotalAmount: ''
                     }));
 
                     setIsformOpen(false);
@@ -310,12 +314,12 @@ const Home = () => {
         if (service === 'pharmacy') {
             setFormData(preVal => ({
                 ...preVal, HospitalName: '', Branch: '', DoctorName: '', ServiceType: null, Appointment: '',
-                DiscountPercentage: 0.0, ConsultationFee: 0, LabPercentage: '', PharmacyPercentage: ''
+                DiscountPercentage: 0.0, ConsultationFee: 0, LabPercentage: '', PharmacyPercentage: '', PaidAmount: '', TotalAmount: ''
             }));
         } else {
             setFormData(preVal => ({
                 ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: null, Appointment: '',
-                DiscountPercentage: 0.0, ConsultationFee: 0, LabPercentage: '', PharmacyPercentage: ''
+                DiscountPercentage: 0.0, ConsultationFee: 0, LabPercentage: '', PharmacyPercentage: '', PaidAmount: '', TotalAmount: ''
             }));
         }        
 
@@ -805,6 +809,26 @@ const Home = () => {
                                         />
                                     </div>
 
+                                    <div className="d-flex flex-column mb-3">
+                                        <label className="form-control-label">Paid Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
+                                        <input type="number" name="PaidAmount" className="form-control" placeholder="Enter Paid Amount"
+                                            value={formData.PaidAmount} min={0} onChange={(e) => onChangeHandler(e)} 
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="d-flex flex-column mb-3">
+                                        <label className="form-control-label">Total Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
+                                        <input type="number" name="TotalAmount" className="form-control" placeholder="Enter Total Amount"
+                                            value={formData.TotalAmount} min={0} onChange={(e) => onChangeHandler(e)} 
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                            }}
+                                        />
+                                    </div>
+
                                 </div>
                                 <div className="text-center">
                                     <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
@@ -836,6 +860,26 @@ const Home = () => {
                                         <label className="form-control-label">Discount Percentage (<span className='text-danger'>%</span>)</label>
                                         <input type="number" name="PharmacyPercentage" className="form-control" placeholder="Enter Discount Percentage"
                                             value={formData.PharmacyPercentage} min={0} max={100} onChange={(e) => onChangeHandler(e)} 
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="d-flex flex-column mb-3">
+                                        <label className="form-control-label">Paid Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
+                                        <input type="number" name="PaidAmount" className="form-control" placeholder="Enter Paid Amount"
+                                            value={formData.PaidAmount} min={0} onChange={(e) => onChangeHandler(e)} 
+                                            onKeyDown={(e) => {
+                                                if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="d-flex flex-column mb-3">
+                                        <label className="form-control-label">Total Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
+                                        <input type="number" name="TotalAmount" className="form-control" placeholder="Enter Total Amount"
+                                            value={formData.TotalAmount} min={0} onChange={(e) => onChangeHandler(e)} 
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
