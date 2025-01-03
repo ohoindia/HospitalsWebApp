@@ -226,7 +226,7 @@ const Home = () => {
             setFormErrors(preVal => ({
                 ...preVal, DateAndTime: 'Please select appointment date & time *'
             }))          
-        } else if (service === 'consultation' && !formData.ServiceType || formData.ServiceType.length < 2) {
+        } else if (service === 'consultation' && !formData.ServiceType) {
 
             setFormErrors(preVal => ({
                 ...preVal, ServiceType: 'Please Enter servicetype *'
@@ -812,7 +812,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Paid Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
                                         <input type="number" name="PaidAmount" className="form-control" placeholder="Enter Paid Amount"
-                                            value={formData.PaidAmount} min={0} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.PaidAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)} 
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
@@ -822,7 +822,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Total Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
                                         <input type="number" name="TotalAmount" className="form-control" placeholder="Enter Total Amount"
-                                            value={formData.TotalAmount} min={0} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.TotalAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)} 
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
@@ -869,7 +869,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Paid Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
                                         <input type="number" name="PaidAmount" className="form-control" placeholder="Enter Paid Amount"
-                                            value={formData.PaidAmount} min={0} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.PaidAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)} 
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
@@ -879,7 +879,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Total Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
                                         <input type="number" name="TotalAmount" className="form-control" placeholder="Enter Total Amount"
-                                            value={formData.TotalAmount} min={0} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.TotalAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)} 
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
