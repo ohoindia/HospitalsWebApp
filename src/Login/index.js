@@ -6,6 +6,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import './input.css';
 import { useSelector, useDispatch } from 'react-redux';
 import { setConfigValue, setHospitalImage } from '../ReduxFunctions/ReduxSlice';
+import { logToCloudWatch } from '../Helpers/cloudwatchLogger';
 
 const Login = () => {
     const configValues = useSelector((state) => state.configValues);
@@ -39,6 +40,14 @@ const Login = () => {
     const inputsRef = useRef([]);
     const navigate = useNavigate();
 
+    const getLogStreamName = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return `${hospitalId} (${hospitalName})-${today}`;
+    };
+
+    const logGroupName = process.env.REACT_APP_LOGGER;
+    const logStreamName = getLogStreamName();
+
     useEffect(() => {
         if (!configValues.length > 0) {
             getConfigValues();
@@ -46,9 +55,9 @@ const Login = () => {
             if (!hospitalImage.length > 0) {
                 const imageUrl = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "hospitalImagesURL");
                 dispatch(setHospitalImage(imageUrl.ConfigValue + hospitalLogo))
-            }            
+            }
         }
-    }, [configValues, hospitalImage]);    
+    }, [configValues, hospitalImage]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -91,7 +100,7 @@ const Login = () => {
             dispatch(setConfigValue(response));
         } catch (e) {
             console.error('Error in ConfigValues/all: ', e);
-        }            
+        }
     };
 
     const handleChange = (value, index) => {
@@ -161,6 +170,11 @@ const Login = () => {
 
             if (otpResponse) {
                 if (otpResponse.status) {
+                    await logToCloudWatch(logGroupName, logStreamName, {
+                        event: 'OTP Sent Successfully',
+                        details: { cardNumber: cardNumber },
+                    });
+
                     setTimeLeft(120);
                     setIsRunning(true);
                     setNumberError('');
@@ -175,11 +189,23 @@ const Login = () => {
                         setIsOtpSent(true);
                     }
                 } else {
+                    await logToCloudWatch(logGroupName, logStreamName, {
+                        event: 'Failed to send OTP -OHOCards/CardNumberorMobileNoVerification',
+                        payload: { cardNumber: cardNumber },
+                        response: otpResponse
+                    });
+
                     setIsRunning(false);
                     setNumberError(otpResponse.message);
                     setOtpLoading(false);
                 }
             } else {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to send OTP -OHOCards/CardNumberorMobileNoVerification',
+                    payload: { cardNumber: cardNumber },
+                    response: otpResponse
+                });
+
                 setNumberError('Sorry, something went wrong. Please contact support team.');
                 setOtpLoading(false);
             }
@@ -191,6 +217,11 @@ const Login = () => {
 
             if (otpResponse) {
                 if (otpResponse.status) {
+                    await logToCloudWatch(logGroupName, logStreamName, {
+                        event: 'OTP Sent Successfully',
+                        details: { mobileNumber },
+                    });
+
                     setTimeLeft(120);
                     setIsRunning(true);
                     setNumberError('');
@@ -205,11 +236,23 @@ const Login = () => {
                         setIsOtpSent(true);
                     }
                 } else {
+                    await logToCloudWatch(logGroupName, logStreamName, {
+                        event: 'Failed to send OTP -OHOCards/CardNumberorMobileNoVerification',
+                        payload: { mobileNumber },
+                        response: otpResponse
+                    });
+
                     setIsRunning(false);
                     setNumberError(otpResponse.message);
                     setOtpLoading(false);
                 }
             } else {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to send OTP -OHOCards/CardNumberorMobileNoVerification',
+                    payload: { mobileNumber },
+                    response: otpResponse
+                });
+
                 setNumberError('Sorry, something went wrong. Please contact support team.');
                 setOtpLoading(false);
             }
@@ -231,6 +274,11 @@ const Login = () => {
                 const currentTime = new Date().getTime();
                 const expirationTime = currentTime + 10 * 60 * 1000;
 
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'OTP Verified Successfully',
+                    details: { mobileNumber, otpGenerated: otp.join(''), guid },
+                });
+
                 setIsOtpSent(false);
                 setVerifyLoading(false);
                 sessionStorage.setItem('memberId', verifyResponse.memberId);
@@ -241,6 +289,11 @@ const Login = () => {
                     state: { memberId: verifyResponse.memberId }
                 });
             } else {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to verify OTP',
+                    details: { mobileNumber, otpGenerated: otp.join(''), guid },
+                });
+
                 setOtpError(verifyResponse.msg);
                 setVerifyLoading(false);
             }
@@ -256,6 +309,11 @@ const Login = () => {
                 const currentTime = new Date().getTime();
                 const expirationTime = currentTime + 10 * 60 * 1000;
 
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'OTP Verified Successfully',
+                    details: { cardNumber: cardNumber, otpGenerated: otp.join(''), guid },
+                });
+
                 setIsOtpSent(false);
                 setVerifyLoading(false);
                 sessionStorage.setItem('memberId', verifyResponse.memberId);
@@ -266,6 +324,11 @@ const Login = () => {
                     state: { memberId: verifyResponse.memberId }
                 });
             } else {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to verify OTP',
+                    details: { cardNumber: cardNumber, otpGenerated: otp.join(''), guid },
+                });
+
                 setOtpError(verifyResponse.msg);
                 setVerifyLoading(false);
             }
