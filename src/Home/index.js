@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { formatDate } from '../CommonFunctions/CommonFunctions';
 import { useSelector, useDispatch } from 'react-redux';
 import { setConfigValue, setHospitalImage } from '../ReduxFunctions/ReduxSlice';
+import { logToCloudWatch } from '../Helpers/cloudwatchLogger';
 
 const Home = () => {
     const configValues = useSelector((state) => state.configValues);
@@ -49,6 +50,14 @@ const Home = () => {
     const hospitalId = sessionStorage.getItem('hospitalId');
     const hospitalName = sessionStorage.getItem('hospitalName');
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
+
+    const getLogStreamName = () => {
+        const today = new Date().toISOString().split('T')[0];
+        return `${hospitalId} (${hospitalName})-${today}`;
+    };
+
+    const logGroupName = process.env.REACT_APP_LOGGER;
+    const logStreamName = getLogStreamName();
 
     // const memberId = 25587;
 
@@ -174,7 +183,7 @@ const Home = () => {
 
             if (/^\d*$/.test(e.target.value) && e.target.value.length <= 3) {
                 setFormData(prevVal => ({
-                    ...prevVal, 
+                    ...prevVal,
                     [e.target.name]: parseInt(e.target.value)
                 }));
             }
@@ -225,7 +234,7 @@ const Home = () => {
 
             setFormErrors(preVal => ({
                 ...preVal, DateAndTime: 'Please select appointment date & time *'
-            }))          
+            }))
         } else if (service === 'consultation' && !formData.ServiceType) {
 
             setFormErrors(preVal => ({
@@ -269,6 +278,13 @@ const Home = () => {
             const responseEligible = await fetchData(`BookingConsultation/bookAppointment/add`, { ...payload });
 
             if (responseEligible.status) {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: `${service === 'consultation' ? 'Free Consultation Booked'
+                        : service === 'lab' ? 'Lab Investigation Booked' : 'Pharmacy Discount Claimed'
+                    } Successfully`,
+                    details: { response: responseEligible },
+                });
+
                 setFormSuccessMessage(responseEligible.message);
                 setEligibilityMessage('');
                 setSubmitLoading(false);
@@ -293,10 +309,22 @@ const Home = () => {
                     getAvailableCoupons();
                 }, 3000);
             } else if (responseEligible.message) {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
+                    payload: {...payload},
+                    response: responseEligible,
+                });
+
                 setEligibilityMessage(responseEligible.message);
                 setFormSuccessMessage('');
                 setSubmitLoading(false);
             } else {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
+                    payload: {...payload},
+                    response: responseEligible,
+                });
+                
                 setEligibilityMessage('Sorry, Your appointment haven`t booked.');
                 setFormSuccessMessage('');
                 setSubmitLoading(false);
@@ -321,7 +349,7 @@ const Home = () => {
                 ...preVal, DateAndTime: '', HospitalName: '', Branch: '', DoctorName: '', ServiceType: null, Appointment: '',
                 DiscountPercentage: 0.0, ConsultationFee: 0, LabPercentage: '', PharmacyPercentage: '', PaidAmount: '', TotalAmount: ''
             }));
-        }        
+        }
 
         setFormErrors({
             DateAndTime: '', HospitalName: '', Branch: '', ServiceType: '', Appointment: ''
@@ -418,7 +446,7 @@ const Home = () => {
             setFormData(preVal => ({
                 ...preVal, DateAndTime: onChangeDateTime(new Date), Appointment: 'Pharmacy Discount'
             }))
-        } 
+        }
     };
 
     const returnDetails = () => {
@@ -802,7 +830,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Discount Percentage (<span className='text-danger'>%</span>)</label>
                                         <input type="number" name="LabPercentage" className="form-control" placeholder="Enter Discount Percentage"
-                                            value={formData.LabPercentage} min={0} max={100} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.LabPercentage} min={0} max={100} onChange={(e) => onChangeHandler(e)}
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
@@ -812,7 +840,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Paid Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
                                         <input type="number" name="PaidAmount" className="form-control" placeholder="Enter Paid Amount"
-                                            value={formData.PaidAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.PaidAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)}
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
@@ -822,7 +850,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Total Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
                                         <input type="number" name="TotalAmount" className="form-control" placeholder="Enter Total Amount"
-                                            value={formData.TotalAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.TotalAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)}
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
@@ -859,7 +887,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Discount Percentage (<span className='text-danger'>%</span>)</label>
                                         <input type="number" name="PharmacyPercentage" className="form-control" placeholder="Enter Discount Percentage"
-                                            value={formData.PharmacyPercentage} min={0} max={100} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.PharmacyPercentage} min={0} max={100} onChange={(e) => onChangeHandler(e)}
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
@@ -869,7 +897,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Paid Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
                                         <input type="number" name="PaidAmount" className="form-control" placeholder="Enter Paid Amount"
-                                            value={formData.PaidAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.PaidAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)}
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}
@@ -879,7 +907,7 @@ const Home = () => {
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">Total Amount (<i className="bi bi-currency-rupee text-danger"></i>)</label>
                                         <input type="number" name="TotalAmount" className="form-control" placeholder="Enter Total Amount"
-                                            value={formData.TotalAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)} 
+                                            value={formData.TotalAmount} min={0} max={999999} onChange={(e) => onChangeHandler(e)}
                                             onKeyDown={(e) => {
                                                 if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
                                             }}

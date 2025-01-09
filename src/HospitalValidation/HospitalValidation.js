@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchData } from '../Helpers/externapi';
+import { logToCloudWatch } from '../Helpers/cloudwatchLogger';
 
 const HospitalValidation = () => {
     const [hospitalCode, setHospitalCode] = useState('');
@@ -55,6 +56,19 @@ const HospitalValidation = () => {
                 sessionStorage.setItem('hospitalId', hosCodeResponse.hospitalId);
                 sessionStorage.setItem('hospitalTime', expirationTime);
 
+                const getLogStreamName = () => {
+                    const today = new Date().toISOString().split('T')[0];
+                    return `${hosCodeResponse.hospitalId} (${hosCodeResponse.hospitalName})-${today}`;
+                };
+            
+                const logGroupName = process.env.REACT_APP_LOGGER;
+                const logStreamName = getLogStreamName();
+
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Hospital Logged In',
+                    details: { hospitalName: hosCodeResponse.hospitalName, hospitalId: hosCodeResponse.hospitalId },
+                });
+
                 setHosCodeError('');
 
                 navigate('/verify', { replace: true });
@@ -108,7 +122,7 @@ const HospitalValidation = () => {
                                         </div>
                                     ) : (
                                         'SUBMIT'
-                                    )}                                    
+                                    )}
                                 </button>
                                 {hosCodeError && hosCodeError.length > 0 && (
                                     <p className='text-danger m-0' style={{ maxWidth: '350px' }}>{hosCodeError}</p>
@@ -126,7 +140,7 @@ const HospitalValidation = () => {
                                 <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                                 <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                                 <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
-                                    style={{ color: '#0E94C3'}}>Privacy Policy</a>
+                                    style={{ color: '#0E94C3' }}>Privacy Policy</a>
                             </div>
 
                         </div>
