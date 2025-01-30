@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchData } from '../Helpers/externapi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import './input.css';
@@ -36,9 +36,12 @@ const Login = () => {
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
     const hospitalId = sessionStorage.getItem('hospitalId');
     const [remainingOtp, setRemainingOtp] = useState();
+    const [frontCard, setFrontcard] = useState();
+    const [backCard, setBackCard] = useState();
 
     const inputsRef = useRef([]);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const getLogStreamName = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -56,6 +59,11 @@ const Login = () => {
                 const imageUrl = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "hospitalImagesURL");
                 dispatch(setHospitalImage(imageUrl.ConfigValue + hospitalLogo))
             }
+            
+            const cardFront = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardFront");
+            const cardBack = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardBack");
+            setFrontcard(cardFront);
+            setBackCard(cardBack);
         }
     }, [configValues, hospitalImage]);
 
@@ -714,22 +722,30 @@ const Login = () => {
                                                     overflow: "hidden",
                                                 }}
                                             >
-                                                <img
-                                                    src={"https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg"}
-                                                    alt="Front side"
-                                                    style={{ width: "100%", height: "100%" }}
-                                                />
-                                                {/* Card Number Overlay */}
-                                                <p className='border border-3 border-danger'
-                                                    style={{
-                                                        position: "absolute", bottom: "8px", left: "26px",
-                                                        color: "white", fontSize: "1.1rem",
-                                                        padding: "5px 10px", borderRadius: "5px"
-                                                    }}
-                                                >
-                                                    2804 XXXX XX29
-                                                </p>
+                                                {frontCard ? (
+                                                    <>
+                                                        <img
+                                                            src={frontCard.ConfigValue}
+                                                            alt="Front side"
+                                                            style={{ width: "100%", height: "100%" }}
+                                                        />
+                                                        {/* Card Number Overlay */}
+                                                        {/* <p className='border border-3 border-danger'
+                                                            style={{
+                                                                position: "absolute", bottom: "8px", left: "26px",
+                                                                color: "white", fontSize: "1.1rem",
+                                                                padding: "5px 10px", borderRadius: "5px"
+                                                            }}
+                                                        >
+                                                        </p> */}
+                                                    </>
+                                                ) : (
+                                                    <div className="spinner-border text-primary" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                )}
                                             </div>
+
 
                                             {/* Back Side */}
                                             <div
@@ -739,13 +755,17 @@ const Login = () => {
                                                     borderRadius: "10px", overflow: "hidden"
                                                 }}
                                             >
-                                                <img
-                                                    src={
-                                                        "https://ohoindia-mous.s3.ap-south-1.amazonaws.com/3b56a6e5-41ca-4049-a882-02a3d14e1d78.jpg"
-                                                    }
-                                                    alt="Back side"
-                                                    style={{ width: "100%", height: "100%" }}
-                                                />
+                                                {backCard ? (
+                                                    <img
+                                                        src={backCard.ConfigValue}
+                                                        alt="Back side"
+                                                        style={{ width: "100%", height: "100%" }}
+                                                    />
+                                                ) : (
+                                                    <div className="spinner-border text-primary" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
