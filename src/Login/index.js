@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchData } from '../Helpers/externapi';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import './input.css';
@@ -41,7 +41,6 @@ const Login = () => {
 
     const inputsRef = useRef([]);
     const navigate = useNavigate();
-    const location = useLocation();
 
     const getLogStreamName = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -59,7 +58,7 @@ const Login = () => {
                 const imageUrl = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "hospitalImagesURL");
                 dispatch(setHospitalImage(imageUrl.ConfigValue + hospitalLogo))
             }
-            
+
             const cardFront = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardFront");
             const cardBack = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardBack");
             setFrontcard(cardFront);
