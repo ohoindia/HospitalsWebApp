@@ -52,7 +52,7 @@ const Home = () => {
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
     const [frontCard, setFrontcard] = useState();
     const [backCard, setBackCard] = useState();
-
+    const [logo, setLogo] = useState();
 
     const getLogStreamName = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -75,6 +75,8 @@ const Home = () => {
 
             const cardFront = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardFront");
             const cardBack = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardBack");
+            const ohoLogo = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "LogoWithoutName");
+            setLogo(ohoLogo);
             setFrontcard(cardFront);
             setBackCard(cardBack);
         }
@@ -955,11 +957,18 @@ const Home = () => {
                     )}
 
                     <div className="d-flex flex-column align-items-center mb-2 mt-auto">
-                        <img src="/applogo.png" alt="logo"
-                            style={{ height: '40px', width: '40px' }}
-                        />
+                        {logo ? (
+                            <img src={logo.ConfigValue} alt="logo"
+                                style={{ height: '40px', width: '40px' }}
+                            />
+                        ) : (
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        )}
+
                         <span className="app-brand-text fw-bolder"
-                            style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                            style={{ fontSize: '18px', color: '#0094c6' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                         <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
@@ -1112,11 +1121,18 @@ const Home = () => {
                     )}
 
                     <div className="d-flex flex-column align-items-center mb-2 mt-auto">
-                        <img src="/applogo.png" alt="logo"
-                            style={{ height: '40px', width: '40px' }}
-                        />
+                        {logo ? (
+                            <img src={logo.ConfigValue} alt="logo"
+                                style={{ height: '40px', width: '40px' }}
+                            />
+                        ) : (
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        )}
+
                         <span className="app-brand-text fw-bolder"
-                            style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                            style={{ fontSize: '18px', color: '#0094c6' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                         <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
