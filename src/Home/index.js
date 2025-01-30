@@ -50,6 +50,9 @@ const Home = () => {
     const hospitalId = sessionStorage.getItem('hospitalId');
     const hospitalName = sessionStorage.getItem('hospitalName');
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
+    const [frontCard, setFrontcard] = useState();
+    const [backCard, setBackCard] = useState();
+
 
     const getLogStreamName = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -69,6 +72,11 @@ const Home = () => {
                 const imageUrl = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "hospitalImagesURL");
                 dispatch(setHospitalImage(imageUrl.ConfigValue + hospitalLogo))
             }
+
+            const cardFront = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardFront");
+            const cardBack = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardBack");
+            setFrontcard(cardFront);
+            setBackCard(cardBack);
         }
     }, [configValues, hospitalImage]);
 
@@ -281,7 +289,7 @@ const Home = () => {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: `${service === 'consultation' ? 'Free Consultation Booked'
                         : service === 'lab' ? 'Lab Investigation Booked' : 'Pharmacy Discount Claimed'
-                    } Successfully`,
+                        } Successfully`,
                     details: { response: responseEligible },
                 });
 
@@ -311,7 +319,7 @@ const Home = () => {
             } else if (responseEligible.message) {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
-                    payload: {...payload},
+                    payload: { ...payload },
                     response: responseEligible,
                 });
 
@@ -321,10 +329,10 @@ const Home = () => {
             } else {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
-                    payload: {...payload},
+                    payload: { ...payload },
                     response: responseEligible,
                 });
-                
+
                 setEligibilityMessage('Sorry, Your appointment haven`t booked.');
                 setFormSuccessMessage('');
                 setSubmitLoading(false);
@@ -549,19 +557,27 @@ const Home = () => {
                                                 overflow: "hidden"
                                             }}
                                         >
-                                            <img
-                                                src={"https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg"}
-                                                alt="Front side"
-                                                style={{ width: "100%", height: "100%" }}
-                                            />
-                                            <p
-                                                style={{
-                                                    position: "absolute", bottom: "15px", left: "40px",
-                                                    color: "white", fontSize: "1.1rem"
-                                                }}
-                                            >
-                                                {memberDetails && memberDetails[0].OHOCardNumber}
-                                            </p>
+                                            {frontCard ? (
+                                                <>
+                                                    <img
+                                                        src={frontCard.ConfigValue}
+                                                        alt="Front side"
+                                                        style={{ width: "100%", height: "100%" }}
+                                                    />
+                                                    <p
+                                                        style={{
+                                                            position: "absolute", bottom: "15px", left: "40px",
+                                                            color: "white", fontSize: "1.1rem"
+                                                        }}
+                                                    >
+                                                        {memberDetails && memberDetails[0].OHOCardNumber}
+                                                    </p>
+                                                </>
+                                            ) : (
+                                                <div className="spinner-border text-primary" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div
@@ -571,13 +587,17 @@ const Home = () => {
                                                 borderRadius: "10px", overflow: "hidden"
                                             }}
                                         >
-                                            <img
-                                                src={
-                                                    "https://ohoindia-mous.s3.ap-south-1.amazonaws.com/3b56a6e5-41ca-4049-a882-02a3d14e1d78.jpg"
-                                                }
-                                                alt="Back side"
-                                                style={{ width: "100%", height: "100%" }}
-                                            />
+                                            {backCard ? (
+                                                <img
+                                                    src={backCard.ConfigValue}
+                                                    alt="Back side"
+                                                    style={{ width: "100%", height: "100%" }}
+                                                />
+                                            ) : (
+                                                <div className="spinner-border text-primary" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

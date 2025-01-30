@@ -729,14 +729,15 @@ const Login = () => {
                                                             style={{ width: "100%", height: "100%" }}
                                                         />
                                                         {/* Card Number Overlay */}
-                                                        {/* <p className='border border-3 border-danger'
+                                                        <p className='border border-3 border-danger'
                                                             style={{
                                                                 position: "absolute", bottom: "8px", left: "26px",
                                                                 color: "white", fontSize: "1.1rem",
                                                                 padding: "5px 10px", borderRadius: "5px"
                                                             }}
                                                         >
-                                                        </p> */}
+                                                            2804 XXXX XX29
+                                                        </p>
                                                     </>
                                                 ) : (
                                                     <div className="spinner-border text-primary" role="status">
