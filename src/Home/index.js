@@ -1061,7 +1061,7 @@ const Home = () => {
                                         {availableCoupons && availableCoupons > 0 ? (
                                             <p className="card-text m-0">You have Maximum of <span className='fs-4 text-danger fw-bold'>{availableCoupons}</span> coupons.</p>
                                         ) : (
-                                            <p className="card-text">Sorry, You dont't have any coupons for this Hospital.</p>
+                                            <p className="card-text">Sorry, You don't have any coupons for this Hospital.</p>
                                         )}
                                     </div>
                                 </div>
