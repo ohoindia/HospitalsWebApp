@@ -50,6 +50,9 @@ const Home = () => {
     const hospitalId = sessionStorage.getItem('hospitalId');
     const hospitalName = sessionStorage.getItem('hospitalName');
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
+    const [frontCard, setFrontcard] = useState();
+    const [backCard, setBackCard] = useState();
+    const [logo, setLogo] = useState();
 
     const getLogStreamName = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -69,6 +72,13 @@ const Home = () => {
                 const imageUrl = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "hospitalImagesURL");
                 dispatch(setHospitalImage(imageUrl.ConfigValue + hospitalLogo))
             }
+
+            const cardFront = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardFront");
+            const cardBack = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardBack");
+            const ohoLogo = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "LogoWithoutName");
+            setLogo(ohoLogo);
+            setFrontcard(cardFront);
+            setBackCard(cardBack);
         }
     }, [configValues, hospitalImage]);
 
@@ -281,7 +291,7 @@ const Home = () => {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: `${service === 'consultation' ? 'Free Consultation Booked'
                         : service === 'lab' ? 'Lab Investigation Booked' : 'Pharmacy Discount Claimed'
-                    } Successfully`,
+                        } Successfully`,
                     details: { response: responseEligible },
                 });
 
@@ -311,7 +321,7 @@ const Home = () => {
             } else if (responseEligible.message) {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
-                    payload: {...payload},
+                    payload: { ...payload },
                     response: responseEligible,
                 });
 
@@ -321,10 +331,10 @@ const Home = () => {
             } else {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
-                    payload: {...payload},
+                    payload: { ...payload },
                     response: responseEligible,
                 });
-                
+
                 setEligibilityMessage('Sorry, Your appointment haven`t booked.');
                 setFormSuccessMessage('');
                 setSubmitLoading(false);
@@ -549,19 +559,27 @@ const Home = () => {
                                                 overflow: "hidden"
                                             }}
                                         >
-                                            <img
-                                                src={"https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg"}
-                                                alt="Front side"
-                                                style={{ width: "100%", height: "100%" }}
-                                            />
-                                            <p
-                                                style={{
-                                                    position: "absolute", bottom: "15px", left: "40px",
-                                                    color: "white", fontSize: "1.1rem"
-                                                }}
-                                            >
-                                                {memberDetails && memberDetails[0].OHOCardNumber}
-                                            </p>
+                                            {frontCard ? (
+                                                <>
+                                                    <img
+                                                        src={frontCard.ConfigValue}
+                                                        alt="Front side"
+                                                        style={{ width: "100%", height: "100%" }}
+                                                    />
+                                                    <p
+                                                        style={{
+                                                            position: "absolute", bottom: "15px", left: "40px",
+                                                            color: "white", fontSize: "1.1rem"
+                                                        }}
+                                                    >
+                                                        {memberDetails && memberDetails[0].OHOCardNumber}
+                                                    </p>
+                                                </>
+                                            ) : (
+                                                <div className="spinner-border text-primary" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div
@@ -571,13 +589,17 @@ const Home = () => {
                                                 borderRadius: "10px", overflow: "hidden"
                                             }}
                                         >
-                                            <img
-                                                src={
-                                                    "https://ohoindia-mous.s3.ap-south-1.amazonaws.com/3b56a6e5-41ca-4049-a882-02a3d14e1d78.jpg"
-                                                }
-                                                alt="Back side"
-                                                style={{ width: "100%", height: "100%" }}
-                                            />
+                                            {backCard ? (
+                                                <img
+                                                    src={backCard.ConfigValue}
+                                                    alt="Back side"
+                                                    style={{ width: "100%", height: "100%" }}
+                                                />
+                                            ) : (
+                                                <div className="spinner-border text-primary" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -935,11 +957,18 @@ const Home = () => {
                     )}
 
                     <div className="d-flex flex-column align-items-center mb-2 mt-auto">
-                        <img src="/applogo.png" alt="logo"
-                            style={{ height: '40px', width: '40px' }}
-                        />
+                        {logo ? (
+                            <img src={logo.ConfigValue} alt="logo"
+                                style={{ height: '40px', width: '40px' }}
+                            />
+                        ) : (
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        )}
+
                         <span className="app-brand-text fw-bolder"
-                            style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                            style={{ fontSize: '18px', color: '#0094c6' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                         <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
@@ -1032,7 +1061,7 @@ const Home = () => {
                                         {availableCoupons && availableCoupons > 0 ? (
                                             <p className="card-text m-0">You have Maximum of <span className='fs-4 text-danger fw-bold'>{availableCoupons}</span> coupons.</p>
                                         ) : (
-                                            <p className="card-text">Sorry, You dont't have any coupons for this Hospital.</p>
+                                            <p className="card-text">Sorry, You don't have any coupons for this Hospital.</p>
                                         )}
                                     </div>
                                 </div>
@@ -1092,11 +1121,18 @@ const Home = () => {
                     )}
 
                     <div className="d-flex flex-column align-items-center mb-2 mt-auto">
-                        <img src="/applogo.png" alt="logo"
-                            style={{ height: '40px', width: '40px' }}
-                        />
+                        {logo ? (
+                            <img src={logo.ConfigValue} alt="logo"
+                                style={{ height: '40px', width: '40px' }}
+                            />
+                        ) : (
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        )}
+
                         <span className="app-brand-text fw-bolder"
-                            style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                            style={{ fontSize: '18px', color: '#0094c6' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                         <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'

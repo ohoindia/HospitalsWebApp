@@ -2,8 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchData } from '../Helpers/externapi';
 import { logToCloudWatch } from '../Helpers/cloudwatchLogger';
+import { useSelector, useDispatch } from 'react-redux';
+import { setConfigValue } from '../ReduxFunctions/ReduxSlice';
 
 const HospitalValidation = () => {
+    const configValues = useSelector((state) => state.configValues);
+    const dispatch = useDispatch();
+
     const [hospitalCode, setHospitalCode] = useState('');
     const [confirmDisable, setConfirmDisable] = useState(true);
     const [confirmLoad, setConfirmLoad] = useState(false);
@@ -12,6 +17,7 @@ const HospitalValidation = () => {
         height: window.innerHeight,
     });
     const [hosCodeError, setHosCodeError] = useState('');
+    const [logo, setLogo] = useState();
 
     const navigate = useNavigate();
 
@@ -29,6 +35,24 @@ const HospitalValidation = () => {
             window.removeEventListener("resize", handleResize);
         };
     }, []);
+
+    useEffect(() => {
+        if (!configValues.length > 0) {
+            getConfigValues();
+        } else {
+            const ohoLogo = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "LogoWithoutName");
+            setLogo(ohoLogo);
+        }
+    }, [configValues]);
+
+    const getConfigValues = async () => {
+        try {
+            const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
+            dispatch(setConfigValue(response));
+        } catch (e) {
+            console.error('Error in ConfigValues/all: ', e);
+        }
+    };
 
     const onChangeHosCode = (e) => {
         setHospitalCode(e.target.value);
@@ -60,7 +84,7 @@ const HospitalValidation = () => {
                     const today = new Date().toISOString().split('T')[0];
                     return `${hosCodeResponse.hospitalId} (${hosCodeResponse.hospitalName})-${today}`;
                 };
-            
+
                 const logGroupName = process.env.REACT_APP_LOGGER;
                 const logStreamName = getLogStreamName();
 
@@ -77,7 +101,7 @@ const HospitalValidation = () => {
             }
             setConfirmLoad(false);
         }
-    }
+    };
 
     return (
         <div
@@ -91,11 +115,18 @@ const HospitalValidation = () => {
                 }}
             >
                 <div className="d-flex flex-column align-items-center mb-2 mt-5">
-                    <img src="/applogo.png" alt="logo"
-                        style={{ height: '60px', width: '60px' }}
-                    />
+                    {logo ? (
+                        <img src={logo.ConfigValue} alt="logo"
+                            style={{ height: '60px', width: '60px' }}
+                        />
+                    ) : (
+                        <div className="spinner-border text-primary" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                        </div>
+                    )}
+
                     <span className="app-brand-text fw-bolder"
-                        style={{ fontSize: '25px', color: '#041F60' }} >OHOINDIA</span>
+                        style={{ fontSize: '25px', color: '#0094c6' }} >OHOINDIA</span>
                 </div>
 
                 <form className='mt-3'>
@@ -132,11 +163,18 @@ const HospitalValidation = () => {
                             <hr className='mt-5' />
 
                             <div className="d-flex flex-column align-items-center mb-2">
-                                <img src="/applogo.png" alt="logo"
-                                    style={{ height: '40px', width: '40px' }}
-                                />
+                                {logo ? (
+                                    <img src={logo.ConfigValue} alt="logo"
+                                        style={{ height: '40px', width: '40px' }}
+                                    />
+                                ) : (
+                                    <div className="spinner-border text-primary" role="status">
+                                        <span className="visually-hidden">Loading...</span>
+                                    </div>
+                                )}
+
                                 <span className="app-brand-text fw-bolder"
-                                    style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                                    style={{ fontSize: '18px', color: '#0094c6' }} >OHOINDIA</span>
                                 <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                                 <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                                 <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'

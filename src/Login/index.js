@@ -36,6 +36,9 @@ const Login = () => {
     const hospitalLogo = sessionStorage.getItem('hospitalImage');
     const hospitalId = sessionStorage.getItem('hospitalId');
     const [remainingOtp, setRemainingOtp] = useState();
+    const [frontCard, setFrontcard] = useState();
+    const [backCard, setBackCard] = useState();
+    const [logo, setLogo] = useState();
 
     const inputsRef = useRef([]);
     const navigate = useNavigate();
@@ -56,6 +59,13 @@ const Login = () => {
                 const imageUrl = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "hospitalImagesURL");
                 dispatch(setHospitalImage(imageUrl.ConfigValue + hospitalLogo))
             }
+
+            const cardFront = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardFront");
+            const cardBack = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "CardBack");
+            const ohoLogo = configValues && configValues.length > 0 && configValues.find(val => val.ConfigKey === "LogoWithoutName");
+            setFrontcard(cardFront);
+            setBackCard(cardBack);
+            setLogo(ohoLogo);
         }
     }, [configValues, hospitalImage]);
 
@@ -557,11 +567,18 @@ const Login = () => {
                     </div>
 
                     <div className="d-flex flex-column align-items-center mt-auto mb-2">
-                        <img src="/applogo.png" alt="logo"
-                            style={{ height: '40px', width: '40px' }}
-                        />
+                        {logo ? (
+                            <img src={logo.ConfigValue} alt="logo"
+                                style={{ height: '40px', width: '40px' }}
+                            />
+                        ) : (
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                        )}
+
                         <span className="app-brand-text fw-bolder"
-                            style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                            style={{ fontSize: '18px', color: '#0094c6' }} >OHOINDIA</span>
                         <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                         <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                         <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
@@ -714,22 +731,31 @@ const Login = () => {
                                                     overflow: "hidden",
                                                 }}
                                             >
-                                                <img
-                                                    src={"https://ohoindia-mous.s3.ap-south-1.amazonaws.com/40831cda-bf5a-4945-b607-36b65f77ac70.jpg"}
-                                                    alt="Front side"
-                                                    style={{ width: "100%", height: "100%" }}
-                                                />
-                                                {/* Card Number Overlay */}
-                                                <p className='border border-3 border-danger'
-                                                    style={{
-                                                        position: "absolute", bottom: "8px", left: "26px",
-                                                        color: "white", fontSize: "1.1rem",
-                                                        padding: "5px 10px", borderRadius: "5px"
-                                                    }}
-                                                >
-                                                    2804 XXXX XX29
-                                                </p>
+                                                {frontCard ? (
+                                                    <>
+                                                        <img
+                                                            src={frontCard.ConfigValue}
+                                                            alt="Front side"
+                                                            style={{ width: "100%", height: "100%" }}
+                                                        />
+                                                        {/* Card Number Overlay */}
+                                                        <p className='border border-3 border-danger'
+                                                            style={{
+                                                                position: "absolute", bottom: "8px", left: "26px",
+                                                                color: "white", fontSize: "1.1rem",
+                                                                padding: "5px 10px", borderRadius: "5px"
+                                                            }}
+                                                        >
+                                                            2804 XXXX XX29
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <div className="spinner-border text-primary" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                )}
                                             </div>
+
 
                                             {/* Back Side */}
                                             <div
@@ -739,13 +765,17 @@ const Login = () => {
                                                     borderRadius: "10px", overflow: "hidden"
                                                 }}
                                             >
-                                                <img
-                                                    src={
-                                                        "https://ohoindia-mous.s3.ap-south-1.amazonaws.com/3b56a6e5-41ca-4049-a882-02a3d14e1d78.jpg"
-                                                    }
-                                                    alt="Back side"
-                                                    style={{ width: "100%", height: "100%" }}
-                                                />
+                                                {backCard ? (
+                                                    <img
+                                                        src={backCard.ConfigValue}
+                                                        alt="Back side"
+                                                        style={{ width: "100%", height: "100%" }}
+                                                    />
+                                                ) : (
+                                                    <div className="spinner-border text-primary" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -770,11 +800,18 @@ const Login = () => {
                                 <hr className='mt-5' />
 
                                 <div className="d-flex flex-column align-items-center mb-2">
-                                    <img src="/applogo.png" alt="logo"
-                                        style={{ height: '40px', width: '40px' }}
-                                    />
+                                    {logo ? (
+                                        <img src={logo.ConfigValue} alt="logo"
+                                            style={{ height: '40px', width: '40px' }}
+                                        />
+                                    ) : (
+                                        <div className="spinner-border text-primary" role="status">
+                                            <span className="visually-hidden">Loading...</span>
+                                        </div>
+                                    )}
+
                                     <span className="app-brand-text fw-bolder"
-                                        style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                                        style={{ fontSize: '18px', color: '#0094c6' }} >OHOINDIA</span>
                                     <span style={{ fontSize: '13px' }}>All rights reserved. Copy right <i className="bi bi-c-circle"></i> OHOINDIA</span>
                                     <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
                                     <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
