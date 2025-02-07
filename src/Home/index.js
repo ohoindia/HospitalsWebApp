@@ -5,7 +5,7 @@ import { faArrowLeft, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { fetchAllData, fetchData } from '../Helpers/externapi';
 import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../Login/input.css';
 import { format } from 'date-fns';
 import { formatDate } from '../CommonFunctions/CommonFunctions';
@@ -45,7 +45,6 @@ const Home = () => {
     const [service, setService] = useState('');
 
     const navigate = useNavigate();
-    const location = useLocation();
     const memberId = sessionStorage.getItem('memberId');
     const hospitalId = sessionStorage.getItem('hospitalId');
     const hospitalName = sessionStorage.getItem('hospitalName');
@@ -280,7 +279,8 @@ const Home = () => {
                 labInvestigationPercentage: formData.LabPercentage,
                 pharmacyDiscountPercentage: formData.PharmacyPercentage,
                 PaidAmount: formData.PaidAmount === '' ? 0 : formData.PaidAmount,
-                TotalAmount: formData.TotalAmount === '' ? 0 : formData.TotalAmount
+                TotalAmount: formData.TotalAmount === '' ? 0 : formData.TotalAmount,
+                Status: "Approved"
             };
 
             setSubmitLoading(true);

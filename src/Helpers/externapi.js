@@ -42,9 +42,7 @@ const fetchAllData = async (urlPath) => {
         console.error('Error while fetching data ', urlPath);
         return;
     }
-
 }
-
 
 const fetchUpdateData = async (urlPath, axiosBody) => {
     try {
@@ -108,9 +106,6 @@ const uploadImage = async (urlPath, formData) => {
     }
 };
 
-
-
-
 const fetchImage = async (imageUrl) => {
     try {
         const response = await fetch(imageUrl);
@@ -124,7 +119,5 @@ const fetchImage = async (imageUrl) => {
         throw new Error(`Error fetching image: ${error.message}`);
     }
 };
-
-
 
 export { fetchData, fetchAllData, fetchUpdateData, fetchDeleteData, uploadImage, fetchImage};
