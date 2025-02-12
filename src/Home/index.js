@@ -400,6 +400,11 @@ const Home = () => {
     const bookAppointment = async (data, value) => {
         getAvailableCoupons();
 
+        await fetchPreviousAppointments({
+            "skip": 0, "take": 0, "HospitalId": hospitalId,
+            "MemberDependentId": 0, "MemberId": memberDetails[0].CardPurchasedMemberId
+        })
+
         if (value === 'member') {
             setFormData((preVal) => ({
                 ...preVal, FullName: data[0].FullName, MobileNumber: data[0].MobileNumber, Cardnumber: data[0].OHOCardNumber,
@@ -407,10 +412,10 @@ const Home = () => {
                 Address: data[0].AddressLine1, MemberDependentId: null
             }))
 
-            await fetchPreviousAppointments({
-                "skip": 0, "take": 0, "HospitalId": hospitalId,
-                "MemberDependentId": 0, "MemberId": data[0].CardPurchasedMemberId
-            })
+            // await fetchPreviousAppointments({
+            //     "skip": 0, "take": 0, "HospitalId": hospitalId,
+            //     "MemberDependentId": 0, "MemberId": data[0].CardPurchasedMemberId
+            // })
 
             setDisplayCoupons(true);
         } else {
@@ -418,6 +423,11 @@ const Home = () => {
                 ...preVal, FullName: data.fullName, Gender: data.gender, DateofBirth: formatDate(data.dateofBirth),
                 Age: calculateAge(data.dateofBirth), MemberDependentId: data.memberDependentId
             }))
+
+            // await fetchPreviousAppointments({
+            //     "skip": 0, "take": 0, "HospitalId": hospitalId,
+            //     "MemberDependentId": 0, "MemberId": memberDetails[0].CardPurchasedMemberId
+            // })
 
             setDisplayCoupons(true);
         }

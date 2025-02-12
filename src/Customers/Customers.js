@@ -166,19 +166,18 @@ const Customers = () => {
                         {hosAppointments && hosAppointments.length > 0 ? hosAppointments.map(app => (
                             <div className='d-flex flex-column shadow-sm p-2 px-3 mb-4'>
                                 <div className='d-flex flex-row justify-content-between align-items-center'>
-                                    <div>
-                                        <h6 className='m-0'>{app.Name}</h6>
-                                        {app.ServiceName && app.ServiceName.length > 0 && (
-                                            <div className='d-flex flex-row justify-content-start align-items-center'>
-                                                <span className='me-1'>{app.ServiceName}</span>
-                                                {app.DoctorName && app.DoctorName.length > 0 && (
-                                                    <span>(Dr. {app.DoctorName})</span>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
+                                    <h6 className='m-0'>{app.Name}</h6>
                                     <span>{formatDate(app.AppointmentDate)}</span>
                                 </div>
+
+                                {app.ServiceName && app.ServiceName.length > 0 && (
+                                    <div className='d-flex flex-row justify-content-start align-items-center flex-wrap'>
+                                        <span className='me-1'>{app.ServiceName}</span>
+                                        {app.DoctorName && app.DoctorName.length > 0 && (
+                                            <span>(Dr. {app.DoctorName})</span>
+                                        )}
+                                    </div>
+                                )}
 
                             </div>
                         )) : <span className='text-danger text-center fw-semibold fs-5'>No Customers till the date.</span>}

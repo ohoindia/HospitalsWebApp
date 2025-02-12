@@ -532,6 +532,8 @@ const Login = () => {
                                     key={index}
                                     type="text"
                                     maxLength="1"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     value={digit}
                                     onChange={(e) => handleChange(e.target.value, index)}
                                     onKeyDown={(e) => handleKeyDown(e, index)}
