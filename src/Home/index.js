@@ -481,7 +481,7 @@ const Home = () => {
                     }}
                 >
                     <Checkmark size='medium' />
-                    <h5 className="text-black m-2 text-center fw-bold" style={{ fontSize: '18px' }}>OHOINDIA MEMBERSHIP VERIFICATION SUCCESS !</h5>
+                    <h5 className="text-black m-2 text-center fw-bold" style={{ fontSize: '18px' }}>OHOINDIA MEMBERSHIP VERIFICATION SUCCESS!</h5>
 
                     {isDataFetched && (
                         <>
