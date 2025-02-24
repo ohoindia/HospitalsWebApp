@@ -9,7 +9,7 @@ const changeUrlPath = (path) => {
     if (path.includes("lambdaAPI")) {
         return `${baseUrl_new}/` + path;
     } else {
-        return `${baseUrl}` + path;
+        return `${baseUrl}/` + path;
     }
 };
 
