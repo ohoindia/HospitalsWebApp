@@ -168,9 +168,9 @@ const Home = () => {
                     Address: memberDetails[0].AddressLine1
                 }))
             ) : dependents.map(each => (
-                each.fullName === e.target.value && (
+                each.name === e.target.value && (
                     setFormData((preVal) => ({
-                        ...preVal, FullName: each.fullName, Gender: each.gender, DateofBirth: formatDate(each.dateofBirth), Age: calculateAge(each.dateofBirth),
+                        ...preVal, FullName: each.name, Gender: each.gender, DateofBirth: formatDate(each.dateofBirth), Age: calculateAge(each.dateofBirth),
                     }))
                 )
             ))
@@ -272,7 +272,7 @@ const Home = () => {
                 hospitalName: hospitalName,
                 hospitalId: hospitalId,
                 serviceTypeId: formData.ServiceType,
-                memberId: memberId,
+                customerId: memberId,
                 memberDependentId: formData.MemberDependentId,
                 doctorName: formData.DoctorName,
                 appointment: formData.Appointment,
@@ -483,7 +483,7 @@ const Home = () => {
                     <Checkmark size='medium' />
                     <h5 className="text-black m-2 text-center fw-bold" style={{ fontSize: '18px' }}>OHOINDIA MEMBERSHIP VERIFICATION SUCCESS!</h5>
 
-                    {isDataFetched && (
+                    {isDataFetched && memberDetails.length > 0 ? (
                         <>
                             <div className='d-flex flex-column p-2 my-3 border rounded' style={{ backgroundColor: '#e8ebe9', minWidth: '350px' }}>
                                 <div className='d-flex flex-row justify-content-between' style={{ minWidth: '350px' }}>
@@ -532,11 +532,11 @@ const Home = () => {
                                 {dependents && dependents.length > 0 && dependents.map(each => (
                                     <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded p-2 mt-2'
                                         style={{ minWidth: '350px', cursor: 'pointer' }}
-                                        key={each.memberDependentId}
+                                        key={each.customerId}
                                         onClick={() => bookAppointment(each, 'dependent')}
                                     >
                                         <div>
-                                            <p className='m-0 fw-bold'>{each.fullName}</p>
+                                            <p className='m-0 fw-bold'>{each.name}</p>
                                             <span>{each.gender} | {calculateAge(each.dateofBirth)} years |
                                                 <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>{each.relationship && each.relationship}<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
                                         </div>
@@ -648,6 +648,15 @@ const Home = () => {
                                     style={{ color: '#0E94C3' }}>Privacy Policy</a>
                             </div>
                         </>
+                    ) : (
+                        <div className='d-flex flex-column justify-content-center align-items-center text-center'>
+                            <p className='mt-5 fs-5'>We are unable to fetch Your details. Please contact at 
+                                <a className="text-primary ms-1" 
+                                    href="mailto:contact@ohoindialife.com"
+                                    style={{ cursor: "pointer" }}
+                                >contact@ohoindialife.com</a>
+                            </p>
+                        </div>
                     )}
 
                     <div
