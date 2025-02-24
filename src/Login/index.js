@@ -174,7 +174,7 @@ const Login = () => {
         if (cardNumber.length === 14) {
             setOtpLoading(true);
 
-            const otpResponse = await fetchData('OHOCards/CardNumberorMobileNoVerification', {
+            const otpResponse = await fetchData('lambdaAPI/OHOCards/CardNumberorMobileNoVerification', {
                 cardNumber: cardNumber
             });
 
@@ -221,7 +221,7 @@ const Login = () => {
             }
         } else if (mobileNumber.length === 10) {
             setOtpLoading(true);
-            const otpResponse = await fetchData('OHOCards/CardNumberorMobileNoVerification', {
+            const otpResponse = await fetchData('lambdaAPI/OHOCards/CardNumberorMobileNoVerification', {
                 mobileNumber
             });
 
@@ -274,7 +274,7 @@ const Login = () => {
 
         if (mobileNumber.length === 10) {
             setVerifyLoading(true);
-            const verifyResponse = await fetchData('Member/OTPValidation', {
+            const verifyResponse = await fetchData('lambdaAPI/Customer/OTPValidation', {
                 mobileNumber,
                 otpGenerated: otp.join(''),
                 guid
@@ -309,7 +309,7 @@ const Login = () => {
             }
         } else if (cardNumber.length === 14) {
             setVerifyLoading(true);
-            const verifyResponse = await fetchData('Member/OTPValidation', {
+            const verifyResponse = await fetchData('lambdaAPI/Customer/OTPValidation', {
                 cardNumber: cardNumber,
                 otpGenerated: otp.join(''),
                 guid

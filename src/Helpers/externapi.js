@@ -1,12 +1,23 @@
 import axios from 'axios';
 
 const baseUrl = process.env.REACT_APP_BASEURL;
+const baseUrl_new = process.env.REACT_APP_BASEURL_NEW;
+
+const changeUrlPath = (path) => {
+    console.log("URLPath: ", path);
+
+    if (path.includes("lambdaAPI")) {
+        return `${baseUrl_new}/` + path;
+    } else {
+        return `${baseUrl}` + path;
+    }
+};
 
 const fetchData = async (urlPath, axiosBody) => {
     try {
         const config = {
             method: "POST",
-            url: baseUrl + urlPath,
+            url: changeUrlPath(urlPath),
             Headers: {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*"
@@ -28,7 +39,7 @@ const fetchAllData = async (urlPath) => {
     try {
         const config = {
             method: "GET",
-            url: baseUrl + urlPath,
+            url: changeUrlPath(urlPath),
             Headers: {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*"
@@ -48,7 +59,7 @@ const fetchUpdateData = async (urlPath, axiosBody) => {
     try {
         const config = {
             method: "PUT",
-            url: baseUrl + urlPath,
+            url: changeUrlPath(urlPath),
             Headers: {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*"
@@ -69,7 +80,7 @@ const fetchDeleteData = async (urlPath, axiosBody) => {
     try {
         const config = {
             method: "DELETE",
-            url: baseUrl + urlPath,
+            url: changeUrlPath(urlPath),
             Headers: {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*"
@@ -90,7 +101,7 @@ const uploadImage = async (urlPath, formData) => {
     try {
         const config = {
             method: "POST",
-            url: baseUrl + urlPath,
+            url: changeUrlPath(urlPath),
             headers: {
                 "Content-Type": "multipart/form-data",
                 "Access-Control-Allow-Origin": "*"
