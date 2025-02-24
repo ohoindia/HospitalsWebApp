@@ -98,7 +98,7 @@ const Home = () => {
 
     useEffect(() => {
         const fetchMemberDetails = async () => {
-            const responseMemberDetails = await fetchAllData(`OHOCards/GetMemberDetailsId/${memberId}`);
+            const responseMemberDetails = await fetchAllData(`lambdaAPI/OHOCards/GetMemberDetailsId/${memberId}`);
             setMemberDetails(responseMemberDetails);
             setIsDataFetched(true);
             responseMemberDetails && responseMemberDetails.length > 0 && (
@@ -111,7 +111,7 @@ const Home = () => {
         };
 
         const fetchDependents = async () => {
-            const responseDependents = await fetchAllData(`MemberDependent/GetByMemberId/${memberId}`);
+            const responseDependents = await fetchAllData(`lambdaAPI/Customer/GetDependentsByCustomerId/${memberId}`);
             setDependents(responseDependents);
         };
 
