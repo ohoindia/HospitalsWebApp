@@ -273,7 +273,7 @@ const Home = () => {
                 hospitalId: hospitalId,
                 serviceTypeId: formData.ServiceType,
                 customerId: memberId,
-                memberDependentId: formData.MemberDependentId,
+                dependentCustomerId: formData.MemberDependentId,
                 doctorName: formData.DoctorName,
                 appointment: formData.Appointment,
                 labInvestigationPercentage: formData.LabPercentage,
@@ -392,7 +392,7 @@ const Home = () => {
     };
 
     const fetchPreviousAppointments = async (payload) => {
-        const getPrevAppointments = await fetchData('BookingConsultation/CustomerConsultationListByHospitalId', { ...payload });
+        const getPrevAppointments = await fetchData('lambdaAPI/BookingConsultation/CustomerConsultationListByHospitalId', { ...payload });
 
         setPreviousAppointments(getPrevAppointments.data);
     };
@@ -420,7 +420,7 @@ const Home = () => {
             setDisplayCoupons(true);
         } else {
             setFormData((preVal) => ({
-                ...preVal, FullName: data.fullName, Gender: data.gender, DateofBirth: formatDate(data.dateofBirth),
+                ...preVal, FullName: data.name, Gender: data.gender, DateofBirth: formatDate(data.dateofBirth),
                 Age: calculateAge(data.dateofBirth), MemberDependentId: data.memberDependentId
             }))
 
@@ -485,7 +485,7 @@ const Home = () => {
 
                     {isDataFetched && memberDetails.length > 0 ? (
                         <>
-                            <div className='d-flex flex-column p-2 my-3 border rounded' style={{ backgroundColor: '#e8ebe9', minWidth: '350px' }}>
+                            <div className='d-flex flex-column p-2 my-3 border rounded' style={{ backgroundColor: '#e8ebe9', minWidth: '350px', maxWidth: '600px' }}>
                                 <div className='d-flex flex-row justify-content-between' style={{ minWidth: '350px' }}>
                                     <div className='d-flex flex-column align-items-center'>
                                         <span>Status</span>
