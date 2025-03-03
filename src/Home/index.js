@@ -483,179 +483,185 @@ const Home = () => {
                     <Checkmark size='medium' />
                     <h5 className="text-black m-2 text-center fw-bold" style={{ fontSize: '18px' }}>OHOINDIA MEMBERSHIP VERIFICATION SUCCESS!</h5>
 
-                    {isDataFetched && memberDetails.length > 0 ? (
-                        <>
-                            <div className='d-flex flex-column p-2 my-3 border rounded' style={{ backgroundColor: '#e8ebe9', minWidth: '350px', maxWidth: '600px' }}>
-                                <div className='d-flex flex-row justify-content-between' style={{ minWidth: '350px' }}>
-                                    <div className='d-flex flex-column align-items-center'>
-                                        <span>Status</span>
-                                        {isValid ? (
-                                            <span className='d-flex flex-row align-items-center fw-semibold'>
-                                                <FontAwesomeIcon icon={faCircle} className='me-2' style={{ color: "#04d928", fontSize: "20px" }} />
-                                                Active
-                                            </span>
-                                        ) : (
-                                            <span className='d-flex flex-row align-items-center fw-semibold'>
-                                                <FontAwesomeIcon icon={faCircle} className='me-2' style={{ color: "red", fontSize: "20px" }} />
-                                                Inactive
-                                            </span>
-                                        )}
-                                    </div>
+                    {isDataFetched ? (
+                        memberDetails.length > 0 ? (
+                            <>
+                                <div className='d-flex flex-column p-2 my-3 border rounded' style={{ backgroundColor: '#e8ebe9', minWidth: '350px', maxWidth: '600px' }}>
+                                    <div className='d-flex flex-row justify-content-between' style={{ minWidth: '350px' }}>
+                                        <div className='d-flex flex-column align-items-center'>
+                                            <span>Status</span>
+                                            {isValid ? (
+                                                <span className='d-flex flex-row align-items-center fw-semibold'>
+                                                    <FontAwesomeIcon icon={faCircle} className='me-2' style={{ color: "#04d928", fontSize: "20px" }} />
+                                                    Active
+                                                </span>
+                                            ) : (
+                                                <span className='d-flex flex-row align-items-center fw-semibold'>
+                                                    <FontAwesomeIcon icon={faCircle} className='me-2' style={{ color: "red", fontSize: "20px" }} />
+                                                    Inactive
+                                                </span>
+                                            )}
+                                        </div>
 
-                                    <div className='d-flex flex-column align-items-center'>
-                                        <span>{isValid ? 'Valid till' : 'Expired On'}</span>
-                                        <span className='fw-semibold'>
-                                            {memberDetails && formatDate(memberDetails[0].EndDate)}
-                                        </span>
+                                        <div className='d-flex flex-column align-items-center'>
+                                            <span>{isValid ? 'Valid till' : 'Expired On'}</span>
+                                            <span className='fw-semibold'>
+                                                {memberDetails && formatDate(memberDetails[0].EndDate)}
+                                            </span>
+                                        </div>
                                     </div>
+                                    <p className='mt-2 m-0'><strong>Address: </strong> {memberDetails && memberDetails[0].AddressLine1}</p>
                                 </div>
-                                <p className='mt-2 m-0'><strong>Address: </strong> {memberDetails && memberDetails[0].AddressLine1}</p>
-                            </div>
 
-                            <h5 className='fw-bold'>SELECT FAMILY MEMBER</h5>
+                                <h5 className='fw-bold'>SELECT FAMILY MEMBER</h5>
 
-                            <ul className='mt-3 list-unstyled'>
-                                <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded px-2 py-1'
-                                    style={{ minWidth: '350px', cursor: 'pointer' }}
-                                    key={memberDetails && memberDetails[0].CardPurchasedMemberId}
-                                    onClick={() => bookAppointment(memberDetails, 'member')}
-                                >
-                                    <div>
-                                        <p className='m-0 fw-bold'>{memberDetails && memberDetails[0].FullName}</p>
-                                        <span>{memberDetails && memberDetails[0].Gender} | {memberDetails && calculateAge(memberDetails[0].DateofBirth)} years |
-                                            <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>Self<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
-                                    </div>
-
-                                    <i className="bi bi-chevron-right fw-bolder"></i>
-                                </li>
-
-                                {dependents && dependents.length > 0 && dependents.map(each => (
-                                    <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded p-2 mt-2'
+                                <ul className='mt-3 list-unstyled'>
+                                    <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded px-2 py-1'
                                         style={{ minWidth: '350px', cursor: 'pointer' }}
-                                        key={each.customerId}
-                                        onClick={() => bookAppointment(each, 'dependent')}
+                                        key={memberDetails && memberDetails[0].CardPurchasedMemberId}
+                                        onClick={() => bookAppointment(memberDetails, 'member')}
                                     >
                                         <div>
-                                            <p className='m-0 fw-bold'>{each.name}</p>
-                                            <span>{each.gender} | {calculateAge(each.dateofBirth)} years |
-                                                <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>{each.relationship && each.relationship}<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
+                                            <p className='m-0 fw-bold'>{memberDetails && memberDetails[0].FullName}</p>
+                                            <span>{memberDetails && memberDetails[0].Gender} | {memberDetails && calculateAge(memberDetails[0].DateofBirth)} years |
+                                                <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>Self<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
                                         </div>
 
                                         <i className="bi bi-chevron-right fw-bolder"></i>
                                     </li>
-                                ))}
-                            </ul>
 
-                            <div className='d-flex flex-column mt-5'>
-                                <div
-                                    style={{
-                                        width: "350px", height: "200px", margin: "10px",
-                                        perspective: "1000px", borderRadius: "5px",
-                                    }}
-                                    onClick={() => setIsFlipped(!isFlipped)}
-                                >
+                                    {dependents && dependents.length > 0 && dependents.map(each => (
+                                        <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded p-2 mt-2'
+                                            style={{ minWidth: '350px', cursor: 'pointer' }}
+                                            key={each.customerId}
+                                            onClick={() => bookAppointment(each, 'dependent')}
+                                        >
+                                            <div>
+                                                <p className='m-0 fw-bold'>{each.name}</p>
+                                                <span>{each.gender} | {calculateAge(each.dateofBirth)} years |
+                                                    <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>{each.relationship && each.relationship}<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
+                                            </div>
+
+                                            <i className="bi bi-chevron-right fw-bolder"></i>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <div className='d-flex flex-column mt-5'>
                                     <div
                                         style={{
-                                            position: "relative", width: "100%", height: "100%",
-                                            textAlign: "center", transition: "transform 0.6s", transformStyle: "preserve-3d",
-                                            transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-                                            borderRadius: "8px",
+                                            width: "350px", height: "200px", margin: "10px",
+                                            perspective: "1000px", borderRadius: "5px",
                                         }}
+                                        onClick={() => setIsFlipped(!isFlipped)}
                                     >
                                         <div
                                             style={{
-                                                position: "absolute", width: "100%", height: "100%",
-                                                backfaceVisibility: "hidden", borderRadius: "10px",
-                                                overflow: "hidden"
+                                                position: "relative", width: "100%", height: "100%",
+                                                textAlign: "center", transition: "transform 0.6s", transformStyle: "preserve-3d",
+                                                transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                                                borderRadius: "8px",
                                             }}
                                         >
-                                            {frontCard ? (
-                                                <>
+                                            <div
+                                                style={{
+                                                    position: "absolute", width: "100%", height: "100%",
+                                                    backfaceVisibility: "hidden", borderRadius: "10px",
+                                                    overflow: "hidden"
+                                                }}
+                                            >
+                                                {frontCard ? (
+                                                    <>
+                                                        <img
+                                                            src={frontCard.ConfigValue}
+                                                            alt="Front side"
+                                                            style={{ width: "100%", height: "100%" }}
+                                                        />
+                                                        <p
+                                                            style={{
+                                                                position: "absolute", bottom: "15px", left: "40px",
+                                                                color: "white", fontSize: "1.1rem"
+                                                            }}
+                                                        >
+                                                            {memberDetails && memberDetails[0].OHOCardNumber}
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <div className="spinner-border text-primary" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div
+                                                style={{
+                                                    position: "absolute", width: "100%", height: "100%",
+                                                    backfaceVisibility: "hidden", transform: "rotateY(180deg)",
+                                                    borderRadius: "10px", overflow: "hidden"
+                                                }}
+                                            >
+                                                {backCard ? (
                                                     <img
-                                                        src={frontCard.ConfigValue}
-                                                        alt="Front side"
+                                                        src={backCard.ConfigValue}
+                                                        alt="Back side"
                                                         style={{ width: "100%", height: "100%" }}
                                                     />
-                                                    <p
-                                                        style={{
-                                                            position: "absolute", bottom: "15px", left: "40px",
-                                                            color: "white", fontSize: "1.1rem"
-                                                        }}
-                                                    >
-                                                        {memberDetails && memberDetails[0].OHOCardNumber}
-                                                    </p>
-                                                </>
-                                            ) : (
-                                                <div className="spinner-border text-primary" role="status">
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div
-                                            style={{
-                                                position: "absolute", width: "100%", height: "100%",
-                                                backfaceVisibility: "hidden", transform: "rotateY(180deg)",
-                                                borderRadius: "10px", overflow: "hidden"
-                                            }}
-                                        >
-                                            {backCard ? (
-                                                <img
-                                                    src={backCard.ConfigValue}
-                                                    alt="Back side"
-                                                    style={{ width: "100%", height: "100%" }}
-                                                />
-                                            ) : (
-                                                <div className="spinner-border text-primary" role="status">
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </div>
-                                            )}
+                                                ) : (
+                                                    <div className="spinner-border text-primary" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <hr />
+                                <hr />
 
-                            <div className='d-flex flex-row justify-content-center align-items-center bg-success text-white fw-semibold rounded'
-                                style={{ backgroundColor: '#0E94C3', minWidth: '350px', minHeight: '30px', cursor: 'pointer' }}
-                                onClick={() => goBackToLogin()}
-                            >
-                                <i className="bi bi-x-lg me-2"></i>
-                                <span>CLOSE</span>
-                            </div>
+                                <div className='d-flex flex-row justify-content-center align-items-center bg-success text-white fw-semibold rounded'
+                                    style={{ backgroundColor: '#0E94C3', minWidth: '350px', minHeight: '30px', cursor: 'pointer' }}
+                                    onClick={() => goBackToLogin()}
+                                >
+                                    <i className="bi bi-x-lg me-2"></i>
+                                    <span>CLOSE</span>
+                                </div>
 
-                            <p className='text-center fw-semibold mt-3'>Need any support ?</p>
-                            <div className='d-flex flex-row mb-4 fw-semibold' style={{ fontSize: '15px' }}>
-                                <a className='me-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
-                                    <i className="bi bi-telephone"></i>
-                                    +91 7671 997 108
-                                </a>
-                                <a className='ms-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
-                                    <i className="bi bi-telephone"></i>
-                                    +91 7032 107 108
-                                </a>
-                            </div>
+                                <p className='text-center fw-semibold mt-3'>Need any support ?</p>
+                                <div className='d-flex flex-row mb-4 fw-semibold' style={{ fontSize: '15px' }}>
+                                    <a className='me-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
+                                        <i className="bi bi-telephone"></i>
+                                        +91 7671 997 108
+                                    </a>
+                                    <a className='ms-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
+                                        <i className="bi bi-telephone"></i>
+                                        +91 7032 107 108
+                                    </a>
+                                </div>
 
-                            <div className="d-flex flex-column align-items-center mb-2">
-                                <img src="/applogo.png" alt="logo"
-                                    style={{ height: '40px', width: '40px' }}
-                                />
-                                <span className="app-brand-text fw-bolder"
-                                    style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
-                                <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
-                                <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
-                                    style={{ color: '#0E94C3' }}>Privacy Policy</a>
+                                <div className="d-flex flex-column align-items-center mb-2">
+                                    <img src="/applogo.png" alt="logo"
+                                        style={{ height: '40px', width: '40px' }}
+                                    />
+                                    <span className="app-brand-text fw-bolder"
+                                        style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                                    <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                                    <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
+                                        style={{ color: '#0E94C3' }}>Privacy Policy</a>
+                                </div>
+                            </>
+                        ) : (
+                            <div className='d-flex flex-column justify-content-center align-items-center text-center'>
+                                <p className='mt-5 fs-5'>We are unable to fetch Your details. Please contact at
+                                    <a className="text-primary ms-1"
+                                        href="mailto:contact@ohoindialife.com"
+                                        style={{ cursor: "pointer" }}
+                                    >contact@ohoindialife.com</a>
+                                </p>
                             </div>
-                        </>
+                        )
                     ) : (
-                        <div className='d-flex flex-column justify-content-center align-items-center text-center'>
-                            <p className='mt-5 fs-5'>We are unable to fetch Your details. Please contact at 
-                                <a className="text-primary ms-1" 
-                                    href="mailto:contact@ohoindialife.com"
-                                    style={{ cursor: "pointer" }}
-                                >contact@ohoindialife.com</a>
-                            </p>
+                        <div className="spinner-border text-primary m-5" role="status">
+                            <span className="visually-hidden">Loading...</span>
                         </div>
                     )}
 
