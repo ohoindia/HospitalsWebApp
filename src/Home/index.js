@@ -824,7 +824,7 @@ const Home = () => {
                                 <div className="text-center">
                                     <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
                                     <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
-                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
+                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }} disabled={submitLoading}>
                                         {submitLoading ? (
                                             <div className="spinner-border text-white" role="status">
                                                 {/* <span className="sr-only">Loading...</span> */}
@@ -902,7 +902,7 @@ const Home = () => {
                                 <div className="text-center">
                                     <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
                                     <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
-                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
+                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }} disabled={submitLoading}>
                                         {submitLoading ? (
                                             <div className="spinner-border text-white" role="status">
                                                 {/* <span className="sr-only">Loading...</span> */}
@@ -959,7 +959,7 @@ const Home = () => {
                                 <div className="text-center">
                                     <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
                                     <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
-                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
+                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }} disabled={submitLoading}>
                                         {submitLoading ? (
                                             <div className="spinner-border text-white" role="status">
                                                 {/* <span className="sr-only">Loading...</span> */}
