@@ -302,6 +302,7 @@ const Login = () => {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to verify OTP',
                     details: { mobileNumber, otpGenerated: otp.join(''), guid },
+                    response: verifyResponse
                 });
 
                 setOtpError(verifyResponse.msg);
@@ -337,6 +338,7 @@ const Login = () => {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to verify OTP',
                     details: { cardNumber: cardNumber, otpGenerated: otp.join(''), guid },
+                    response: verifyResponse
                 });
 
                 setOtpError(verifyResponse.msg);
