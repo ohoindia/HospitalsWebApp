@@ -5,7 +5,7 @@ import { faArrowLeft, faCircle } from '@fortawesome/free-solid-svg-icons';
 import { fetchAllData, fetchData } from '../Helpers/externapi';
 import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../Login/input.css';
 import { format } from 'date-fns';
 import { formatDate } from '../CommonFunctions/CommonFunctions';
@@ -45,7 +45,6 @@ const Home = () => {
     const [service, setService] = useState('');
 
     const navigate = useNavigate();
-    const location = useLocation();
     const memberId = sessionStorage.getItem('memberId');
     const hospitalId = sessionStorage.getItem('hospitalId');
     const hospitalName = sessionStorage.getItem('hospitalName');
@@ -99,7 +98,7 @@ const Home = () => {
 
     useEffect(() => {
         const fetchMemberDetails = async () => {
-            const responseMemberDetails = await fetchAllData(`OHOCards/GetMemberDetailsId/${memberId}`);
+            const responseMemberDetails = await fetchAllData(`lambdaAPI/OHOCards/GetMemberDetailsId/${memberId}`);
             setMemberDetails(responseMemberDetails);
             setIsDataFetched(true);
             responseMemberDetails && responseMemberDetails.length > 0 && (
@@ -112,7 +111,7 @@ const Home = () => {
         };
 
         const fetchDependents = async () => {
-            const responseDependents = await fetchAllData(`MemberDependent/GetByMemberId/${memberId}`);
+            const responseDependents = await fetchAllData(`lambdaAPI/Customer/GetDependentsByCustomerId/${memberId}`);
             setDependents(responseDependents);
         };
 
@@ -169,9 +168,9 @@ const Home = () => {
                     Address: memberDetails[0].AddressLine1
                 }))
             ) : dependents.map(each => (
-                each.fullName === e.target.value && (
+                each.name === e.target.value && (
                     setFormData((preVal) => ({
-                        ...preVal, FullName: each.fullName, Gender: each.gender, DateofBirth: formatDate(each.dateofBirth), Age: calculateAge(each.dateofBirth),
+                        ...preVal, FullName: each.name, Gender: each.gender, DateofBirth: formatDate(each.dateofBirth), Age: calculateAge(each.dateofBirth),
                     }))
                 )
             ))
@@ -273,14 +272,15 @@ const Home = () => {
                 hospitalName: hospitalName,
                 hospitalId: hospitalId,
                 serviceTypeId: formData.ServiceType,
-                memberId: memberId,
-                memberDependentId: formData.MemberDependentId,
+                customerId: memberId,
+                dependentCustomerId: formData.MemberDependentId,
                 doctorName: formData.DoctorName,
                 appointment: formData.Appointment,
                 labInvestigationPercentage: formData.LabPercentage,
                 pharmacyDiscountPercentage: formData.PharmacyPercentage,
                 PaidAmount: formData.PaidAmount === '' ? 0 : formData.PaidAmount,
-                TotalAmount: formData.TotalAmount === '' ? 0 : formData.TotalAmount
+                TotalAmount: formData.TotalAmount === '' ? 0 : formData.TotalAmount,
+                Status: "Approved"
             };
 
             setSubmitLoading(true);
@@ -392,13 +392,18 @@ const Home = () => {
     };
 
     const fetchPreviousAppointments = async (payload) => {
-        const getPrevAppointments = await fetchData('BookingConsultation/CustomerConsultationListByHospitalId', { ...payload });
+        const getPrevAppointments = await fetchData('lambdaAPI/BookingConsultation/CustomerConsultationListByHospitalId', { ...payload });
 
         setPreviousAppointments(getPrevAppointments.data);
     };
 
     const bookAppointment = async (data, value) => {
         getAvailableCoupons();
+
+        await fetchPreviousAppointments({
+            "skip": 0, "take": 0, "HospitalId": hospitalId,
+            "MemberDependentId": 0, "MemberId": memberDetails[0].CardPurchasedMemberId
+        })
 
         if (value === 'member') {
             setFormData((preVal) => ({
@@ -407,17 +412,22 @@ const Home = () => {
                 Address: data[0].AddressLine1, MemberDependentId: null
             }))
 
-            await fetchPreviousAppointments({
-                "skip": 0, "take": 0, "HospitalId": hospitalId,
-                "MemberDependentId": 0, "MemberId": data[0].CardPurchasedMemberId
-            })
+            // await fetchPreviousAppointments({
+            //     "skip": 0, "take": 0, "HospitalId": hospitalId,
+            //     "MemberDependentId": 0, "MemberId": data[0].CardPurchasedMemberId
+            // })
 
             setDisplayCoupons(true);
         } else {
             setFormData((preVal) => ({
-                ...preVal, FullName: data.fullName, Gender: data.gender, DateofBirth: formatDate(data.dateofBirth),
+                ...preVal, FullName: data.name, Gender: data.gender, DateofBirth: formatDate(data.dateofBirth),
                 Age: calculateAge(data.dateofBirth), MemberDependentId: data.memberDependentId
             }))
+
+            // await fetchPreviousAppointments({
+            //     "skip": 0, "take": 0, "HospitalId": hospitalId,
+            //     "MemberDependentId": 0, "MemberId": memberDetails[0].CardPurchasedMemberId
+            // })
 
             setDisplayCoupons(true);
         }
@@ -471,173 +481,188 @@ const Home = () => {
                     }}
                 >
                     <Checkmark size='medium' />
-                    <h5 className="text-black m-2 text-center fw-bold" style={{ fontSize: '18px' }}>OHOINDIA MEMBERSHIP VERIFICATION SUCCESS !</h5>
+                    <h5 className="text-black m-2 text-center fw-bold" style={{ fontSize: '18px' }}>OHOINDIA MEMBERSHIP VERIFICATION SUCCESS!</h5>
 
-                    {isDataFetched && (
-                        <>
-                            <div className='d-flex flex-column p-2 my-3 border rounded' style={{ backgroundColor: '#e8ebe9', minWidth: '350px' }}>
-                                <div className='d-flex flex-row justify-content-between' style={{ minWidth: '350px' }}>
-                                    <div className='d-flex flex-column align-items-center'>
-                                        <span>Status</span>
-                                        {isValid ? (
-                                            <span className='d-flex flex-row align-items-center fw-semibold'>
-                                                <FontAwesomeIcon icon={faCircle} className='me-2' style={{ color: "#04d928", fontSize: "20px" }} />
-                                                Active
-                                            </span>
-                                        ) : (
-                                            <span className='d-flex flex-row align-items-center fw-semibold'>
-                                                <FontAwesomeIcon icon={faCircle} className='me-2' style={{ color: "red", fontSize: "20px" }} />
-                                                Inactive
-                                            </span>
-                                        )}
-                                    </div>
+                    {isDataFetched ? (
+                        memberDetails.length > 0 ? (
+                            <>
+                                <div className='d-flex flex-column p-2 my-3 border rounded' style={{ backgroundColor: '#e8ebe9', minWidth: '350px', maxWidth: '600px' }}>
+                                    <div className='d-flex flex-row justify-content-between' style={{ minWidth: '350px' }}>
+                                        <div className='d-flex flex-column align-items-center'>
+                                            <span>Status</span>
+                                            {isValid ? (
+                                                <span className='d-flex flex-row align-items-center fw-semibold'>
+                                                    <FontAwesomeIcon icon={faCircle} className='me-2' style={{ color: "#04d928", fontSize: "20px" }} />
+                                                    Active
+                                                </span>
+                                            ) : (
+                                                <span className='d-flex flex-row align-items-center fw-semibold'>
+                                                    <FontAwesomeIcon icon={faCircle} className='me-2' style={{ color: "red", fontSize: "20px" }} />
+                                                    Inactive
+                                                </span>
+                                            )}
+                                        </div>
 
-                                    <div className='d-flex flex-column align-items-center'>
-                                        <span>{isValid ? 'Valid till' : 'Expired On'}</span>
-                                        <span className='fw-semibold'>
-                                            {memberDetails && formatDate(memberDetails[0].EndDate)}
-                                        </span>
+                                        <div className='d-flex flex-column align-items-center'>
+                                            <span>{isValid ? 'Valid till' : 'Expired On'}</span>
+                                            <span className='fw-semibold'>
+                                                {memberDetails && formatDate(memberDetails[0].EndDate)}
+                                            </span>
+                                        </div>
                                     </div>
+                                    <p className='mt-2 m-0'><strong>Address: </strong> {memberDetails && memberDetails[0].AddressLine1}</p>
                                 </div>
-                                <p className='mt-2 m-0'><strong>Address: </strong> {memberDetails && memberDetails[0].AddressLine1}</p>
-                            </div>
 
-                            <h5 className='fw-bold'>SELECT FAMILY MEMBER</h5>
+                                <h5 className='fw-bold'>SELECT FAMILY MEMBER</h5>
 
-                            <ul className='mt-3 list-unstyled'>
-                                <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded px-2 py-1'
-                                    style={{ minWidth: '350px', cursor: 'pointer' }}
-                                    key={memberDetails && memberDetails[0].CardPurchasedMemberId}
-                                    onClick={() => bookAppointment(memberDetails, 'member')}
-                                >
-                                    <div>
-                                        <p className='m-0 fw-bold'>{memberDetails && memberDetails[0].FullName}</p>
-                                        <span>{memberDetails && memberDetails[0].Gender} | {memberDetails && calculateAge(memberDetails[0].DateofBirth)} years |
-                                            <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>Self<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
-                                    </div>
-
-                                    <i className="bi bi-chevron-right fw-bolder"></i>
-                                </li>
-
-                                {dependents && dependents.length > 0 && dependents.map(each => (
-                                    <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded p-2 mt-2'
+                                <ul className='mt-3 list-unstyled'>
+                                    <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded px-2 py-1'
                                         style={{ minWidth: '350px', cursor: 'pointer' }}
-                                        key={each.memberDependentId}
-                                        onClick={() => bookAppointment(each, 'dependent')}
+                                        key={memberDetails && memberDetails[0].CardPurchasedMemberId}
+                                        onClick={() => bookAppointment(memberDetails, 'member')}
                                     >
                                         <div>
-                                            <p className='m-0 fw-bold'>{each.fullName}</p>
-                                            <span>{each.gender} | {calculateAge(each.dateofBirth)} years |
-                                                <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>{each.relationship && each.relationship}<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
+                                            <p className='m-0 fw-bold'>{memberDetails && memberDetails[0].FullName}</p>
+                                            <span>{memberDetails && memberDetails[0].Gender} | {memberDetails && calculateAge(memberDetails[0].DateofBirth)} years |
+                                                <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>Self<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
                                         </div>
 
                                         <i className="bi bi-chevron-right fw-bolder"></i>
                                     </li>
-                                ))}
-                            </ul>
 
-                            <div className='d-flex flex-column mt-5'>
-                                <div
-                                    style={{
-                                        width: "350px", height: "200px", margin: "10px",
-                                        perspective: "1000px", borderRadius: "5px",
-                                    }}
-                                    onClick={() => setIsFlipped(!isFlipped)}
-                                >
+                                    {dependents && dependents.length > 0 && dependents.map(each => (
+                                        <li className='d-flex flex-row justify-content-between align-items-center border border-2 rounded p-2 mt-2'
+                                            style={{ minWidth: '350px', cursor: 'pointer' }}
+                                            key={each.customerId}
+                                            onClick={() => bookAppointment(each, 'dependent')}
+                                        >
+                                            <div>
+                                                <p className='m-0 fw-bold'>{each.name}</p>
+                                                <span>{each.gender} | {calculateAge(each.dateofBirth)} years |
+                                                    <span className='fw-bold' style={{ color: '#0E94C3' }}> ( </span>{each.relationship && each.relationship}<span className='fw-bold' style={{ color: '#0E94C3' }}> ) </span></span>
+                                            </div>
+
+                                            <i className="bi bi-chevron-right fw-bolder"></i>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <div className='d-flex flex-column mt-5'>
                                     <div
                                         style={{
-                                            position: "relative", width: "100%", height: "100%",
-                                            textAlign: "center", transition: "transform 0.6s", transformStyle: "preserve-3d",
-                                            transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-                                            borderRadius: "8px",
+                                            width: "350px", height: "200px", margin: "10px",
+                                            perspective: "1000px", borderRadius: "5px",
                                         }}
+                                        onClick={() => setIsFlipped(!isFlipped)}
                                     >
                                         <div
                                             style={{
-                                                position: "absolute", width: "100%", height: "100%",
-                                                backfaceVisibility: "hidden", borderRadius: "10px",
-                                                overflow: "hidden"
+                                                position: "relative", width: "100%", height: "100%",
+                                                textAlign: "center", transition: "transform 0.6s", transformStyle: "preserve-3d",
+                                                transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                                                borderRadius: "8px",
                                             }}
                                         >
-                                            {frontCard ? (
-                                                <>
+                                            <div
+                                                style={{
+                                                    position: "absolute", width: "100%", height: "100%",
+                                                    backfaceVisibility: "hidden", borderRadius: "10px",
+                                                    overflow: "hidden"
+                                                }}
+                                            >
+                                                {frontCard ? (
+                                                    <>
+                                                        <img
+                                                            src={frontCard.ConfigValue}
+                                                            alt="Front side"
+                                                            style={{ width: "100%", height: "100%" }}
+                                                        />
+                                                        <p
+                                                            style={{
+                                                                position: "absolute", bottom: "15px", left: "40px",
+                                                                color: "white", fontSize: "1.1rem"
+                                                            }}
+                                                        >
+                                                            {memberDetails && memberDetails[0].OHOCardNumber}
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <div className="spinner-border text-primary" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div
+                                                style={{
+                                                    position: "absolute", width: "100%", height: "100%",
+                                                    backfaceVisibility: "hidden", transform: "rotateY(180deg)",
+                                                    borderRadius: "10px", overflow: "hidden"
+                                                }}
+                                            >
+                                                {backCard ? (
                                                     <img
-                                                        src={frontCard.ConfigValue}
-                                                        alt="Front side"
+                                                        src={backCard.ConfigValue}
+                                                        alt="Back side"
                                                         style={{ width: "100%", height: "100%" }}
                                                     />
-                                                    <p
-                                                        style={{
-                                                            position: "absolute", bottom: "15px", left: "40px",
-                                                            color: "white", fontSize: "1.1rem"
-                                                        }}
-                                                    >
-                                                        {memberDetails && memberDetails[0].OHOCardNumber}
-                                                    </p>
-                                                </>
-                                            ) : (
-                                                <div className="spinner-border text-primary" role="status">
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div
-                                            style={{
-                                                position: "absolute", width: "100%", height: "100%",
-                                                backfaceVisibility: "hidden", transform: "rotateY(180deg)",
-                                                borderRadius: "10px", overflow: "hidden"
-                                            }}
-                                        >
-                                            {backCard ? (
-                                                <img
-                                                    src={backCard.ConfigValue}
-                                                    alt="Back side"
-                                                    style={{ width: "100%", height: "100%" }}
-                                                />
-                                            ) : (
-                                                <div className="spinner-border text-primary" role="status">
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </div>
-                                            )}
+                                                ) : (
+                                                    <div className="spinner-border text-primary" role="status">
+                                                        <span className="visually-hidden">Loading...</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <hr />
+                                <hr />
 
-                            <div className='d-flex flex-row justify-content-center align-items-center bg-success text-white fw-semibold rounded'
-                                style={{ backgroundColor: '#0E94C3', minWidth: '350px', minHeight: '30px', cursor: 'pointer' }}
-                                onClick={() => goBackToLogin()}
-                            >
-                                <i className="bi bi-x-lg me-2"></i>
-                                <span>CLOSE</span>
-                            </div>
+                                <div className='d-flex flex-row justify-content-center align-items-center bg-success text-white fw-semibold rounded'
+                                    style={{ backgroundColor: '#0E94C3', minWidth: '350px', minHeight: '30px', cursor: 'pointer' }}
+                                    onClick={() => goBackToLogin()}
+                                >
+                                    <i className="bi bi-x-lg me-2"></i>
+                                    <span>CLOSE</span>
+                                </div>
 
-                            <p className='text-center fw-semibold mt-3'>Need any support ?</p>
-                            <div className='d-flex flex-row mb-4 fw-semibold' style={{ fontSize: '15px' }}>
-                                <a className='me-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
-                                    <i className="bi bi-telephone"></i>
-                                    +91 7671 997 108
-                                </a>
-                                <a className='ms-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
-                                    <i className="bi bi-telephone"></i>
-                                    +91 7032 107 108
-                                </a>
-                            </div>
+                                <p className='text-center fw-semibold mt-3'>Need any support ?</p>
+                                <div className='d-flex flex-row mb-4 fw-semibold' style={{ fontSize: '15px' }}>
+                                    <a className='me-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
+                                        <i className="bi bi-telephone"></i>
+                                        +91 7671 997 108
+                                    </a>
+                                    <a className='ms-3' href="tel:+917671997108" style={{ textDecoration: 'none', color: '#0E94C3' }}>
+                                        <i className="bi bi-telephone"></i>
+                                        +91 7032 107 108
+                                    </a>
+                                </div>
 
-                            <div className="d-flex flex-column align-items-center mb-2">
-                                <img src="/applogo.png" alt="logo"
-                                    style={{ height: '40px', width: '40px' }}
-                                />
-                                <span className="app-brand-text fw-bolder"
-                                    style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
-                                <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
-                                <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
-                                    style={{ color: '#0E94C3' }}>Privacy Policy</a>
+                                <div className="d-flex flex-column align-items-center mb-2">
+                                    <img src="/applogo.png" alt="logo"
+                                        style={{ height: '40px', width: '40px' }}
+                                    />
+                                    <span className="app-brand-text fw-bolder"
+                                        style={{ fontSize: '18px', color: '#041F60' }} >OHOINDIA</span>
+                                    <span className='fw-semibold mt-3' style={{ color: '#0E94C3', fontSize: '13px' }}>Powerd by OHOINDIA TECHNOLOGY v1.0</span>
+                                    <a href='https://www.ohoindialife.in/privacypolicy' target='_blank'
+                                        style={{ color: '#0E94C3' }}>Privacy Policy</a>
+                                </div>
+                            </>
+                        ) : (
+                            <div className='d-flex flex-column justify-content-center align-items-center text-center'>
+                                <p className='mt-5 fs-5'>We are unable to fetch Your details. Please contact at
+                                    <a className="text-primary ms-1"
+                                        href="mailto:contact@ohoindialife.com"
+                                        style={{ cursor: "pointer" }}
+                                    >contact@ohoindialife.com</a>
+                                </p>
                             </div>
-                        </>
+                        )
+                    ) : (
+                        <div className="spinner-border text-primary m-5" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                        </div>
                     )}
 
                     <div
@@ -805,7 +830,7 @@ const Home = () => {
                                 <div className="text-center">
                                     <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
                                     <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
-                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
+                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }} disabled={submitLoading}>
                                         {submitLoading ? (
                                             <div className="spinner-border text-white" role="status">
                                                 {/* <span className="sr-only">Loading...</span> */}
@@ -883,7 +908,7 @@ const Home = () => {
                                 <div className="text-center">
                                     <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
                                     <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
-                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
+                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }} disabled={submitLoading}>
                                         {submitLoading ? (
                                             <div className="spinner-border text-white" role="status">
                                                 {/* <span className="sr-only">Loading...</span> */}
@@ -940,7 +965,7 @@ const Home = () => {
                                 <div className="text-center">
                                     <button type="button" className="btn btn-secondary me-1" onClick={(e) => handleCancel(e)}>Cancel</button>
                                     <button type="button" className="btn btn-danger me-1" onClick={(e) => handleReset(e)}>Reset</button>
-                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }}>
+                                    <button type="submit" className="btn btn-success" style={{ width: '80px', height: '40px' }} disabled={submitLoading}>
                                         {submitLoading ? (
                                             <div className="spinner-border text-white" role="status">
                                                 {/* <span className="sr-only">Loading...</span> */}

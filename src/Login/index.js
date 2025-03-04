@@ -174,7 +174,7 @@ const Login = () => {
         if (cardNumber.length === 14) {
             setOtpLoading(true);
 
-            const otpResponse = await fetchData('OHOCards/CardNumberorMobileNoVerification', {
+            const otpResponse = await fetchData('lambdaAPI/OHOCards/CardNumberorMobileNoVerification', {
                 cardNumber: cardNumber
             });
 
@@ -221,7 +221,7 @@ const Login = () => {
             }
         } else if (mobileNumber.length === 10) {
             setOtpLoading(true);
-            const otpResponse = await fetchData('OHOCards/CardNumberorMobileNoVerification', {
+            const otpResponse = await fetchData('lambdaAPI/OHOCards/CardNumberorMobileNoVerification', {
                 mobileNumber
             });
 
@@ -274,7 +274,7 @@ const Login = () => {
 
         if (mobileNumber.length === 10) {
             setVerifyLoading(true);
-            const verifyResponse = await fetchData('Member/OTPValidation', {
+            const verifyResponse = await fetchData('lambdaAPI/Customer/OTPValidation', {
                 mobileNumber,
                 otpGenerated: otp.join(''),
                 guid
@@ -302,6 +302,7 @@ const Login = () => {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to verify OTP',
                     details: { mobileNumber, otpGenerated: otp.join(''), guid },
+                    response: verifyResponse
                 });
 
                 setOtpError(verifyResponse.msg);
@@ -309,7 +310,7 @@ const Login = () => {
             }
         } else if (cardNumber.length === 14) {
             setVerifyLoading(true);
-            const verifyResponse = await fetchData('Member/OTPValidation', {
+            const verifyResponse = await fetchData('lambdaAPI/Customer/OTPValidation', {
                 cardNumber: cardNumber,
                 otpGenerated: otp.join(''),
                 guid
@@ -337,6 +338,7 @@ const Login = () => {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to verify OTP',
                     details: { cardNumber: cardNumber, otpGenerated: otp.join(''), guid },
+                    response: verifyResponse
                 });
 
                 setOtpError(verifyResponse.msg);
@@ -532,6 +534,8 @@ const Login = () => {
                                     key={index}
                                     type="text"
                                     maxLength="1"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     value={digit}
                                     onChange={(e) => handleChange(e.target.value, index)}
                                     onKeyDown={(e) => handleKeyDown(e, index)}
