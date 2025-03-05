@@ -381,13 +381,15 @@ const Home = () => {
     };
 
     const getAvailableCoupons = async () => {
-        const fetchAvailableCoupons = await fetchData('BookingConsultation/checkAvailableCoupons', {
+        const fetchAvailableCoupons = await fetchData('lambdaAPI/BookingConsultation/checkAvailableCoupons', {
             cardNumber: memberDetails[0].OHOCardNumber,
             hospitalId
         });
 
         if (fetchAvailableCoupons && fetchAvailableCoupons.status) {
             setAvailableCoupons(fetchAvailableCoupons.availableCoupons);
+        } else {
+            setAvailableCoupons();
         }
     };
 
