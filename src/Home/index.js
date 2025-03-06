@@ -58,6 +58,8 @@ const Home = () => {
         return `${hospitalId} (${hospitalName})-${today}`;
     };
 
+    console.log("MemberDet: ", memberDetails);
+
     const logGroupName = process.env.REACT_APP_LOGGER;
     const logStreamName = getLogStreamName();
 
@@ -382,8 +384,7 @@ const Home = () => {
 
     const getAvailableCoupons = async () => {
         const fetchAvailableCoupons = await fetchData('lambdaAPI/BookingConsultation/checkAvailableCoupons', {
-            cardNumber: memberDetails[0].OHOCardNumber,
-            hospitalId
+            customerId: memberId
         });
 
         if (fetchAvailableCoupons && fetchAvailableCoupons.status) {
