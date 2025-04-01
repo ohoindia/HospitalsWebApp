@@ -4,8 +4,6 @@ const baseUrl = process.env.REACT_APP_BASEURL;
 const baseUrl_new = process.env.REACT_APP_BASEURL_NEW;
 
 const changeUrlPath = (path) => {
-    console.log("URLPath: ", path);
-
     if (path.includes("lambdaAPI")) {
         return `${baseUrl_new}/` + path;
     } else {
