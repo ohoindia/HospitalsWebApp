@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Checkmark } from 'react-checkmark';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faCircle } from '@fortawesome/free-solid-svg-icons';
-import { fetchAllData, fetchData } from '../Helpers/externapi';
+import { fetchAllData, fetchData, fetchUpdateData } from '../Helpers/externapi';
 import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ import { formatDate } from '../CommonFunctions/CommonFunctions';
 import { useSelector, useDispatch } from 'react-redux';
 import { setConfigValue, setHospitalImage } from '../ReduxFunctions/ReduxSlice';
 import { logToCloudWatch } from '../Helpers/cloudwatchLogger';
+import { faArrowRight, faCheck, faTicket } from '@fortawesome/free-solid-svg-icons';
 
 const Home = () => {
     const configValues = useSelector((state) => state.configValues);
@@ -43,6 +44,9 @@ const Home = () => {
     const [serviceTypes, setServiceTYpes] = useState([]);
     const [previousAppointments, setPreviousAppointments] = useState();
     const [service, setService] = useState('');
+    const [servicesLoading, setServicesLoading] = useState(true);
+
+    const [hospitalServices, setHospitalServices] = useState([]);
 
     const navigate = useNavigate();
     const memberId = sessionStorage.getItem('memberId');
@@ -52,13 +56,20 @@ const Home = () => {
     const [frontCard, setFrontcard] = useState();
     const [backCard, setBackCard] = useState();
     const [logo, setLogo] = useState();
+    const [amount, setAmount] = useState('');
+    const [couponCount, setCouponCount] = useState(0);
+
+    const [memberCoupons, setMemberCoupons] = useState({});
+    const [dependentCoupons, setDependentCoupons] = useState({});
+    const [selectedMemberType, setSelectedMemberType] = useState();
+    const [bookingConsultationId, setBookingConsultationId] = useState(null);
 
     const getLogStreamName = () => {
         const today = new Date().toISOString().split('T')[0];
         return `${hospitalId} (${hospitalName})-${today}`;
     };
 
-    console.log("MemberDet: ", memberDetails);
+
 
     const logGroupName = process.env.REACT_APP_LOGGER;
     const logStreamName = getLogStreamName();
@@ -117,15 +128,46 @@ const Home = () => {
             setDependents(responseDependents);
         };
 
+
+
+
+
         const fetchServiceTypes = async () => {
             const getServiceTypes = await fetchData("HospitalServices/all", { skip: 0, take: 0 });
             setServiceTYpes(getServiceTypes);
         };
 
+        const fetchHospitalServices = async () => {
+            setServicesLoading(true);
+            try {
+
+                const servicesResponse = await fetchAllData(`HospitalPoliciesProvision/GetByHospitalId/${hospitalId}`);
+
+
+                if (servicesResponse) {
+                    setHospitalServices(servicesResponse || []);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setServicesLoading(false);
+            }
+        }
+
         fetchMemberDetails();
         fetchDependents();
         fetchServiceTypes();
+        fetchHospitalServices();
+
+
+        getAvailableCoupons();
     }, []);
+
+
+
+
+
+
 
     useEffect(() => {
         if (memberDetails && memberDetails.length > 0) {
@@ -141,6 +183,11 @@ const Home = () => {
         try {
             const response = await fetchData('ConfigValues/all', { skip: 0, take: 0 });
             dispatch(setConfigValue(response));
+
+            const profileUrl = response && response.find(value => value.ConfigKey === 'couponAmount');
+            setAmount(profileUrl.ConfigValue);
+
+
         } catch (e) {
             console.error('Error in ConfigValues/all: ', e);
         }
@@ -262,42 +309,130 @@ const Home = () => {
         const noError = checkErrors();
 
         if (noError) {
-            const payload = {
-                name: formData.FullName,
-                mobileNumber: formData.MobileNumber,
-                cardNumber: formData.Cardnumber,
-                gender: formData.Gender,
-                dateofBirth: formateDatabaseDatetime(formData.DateofBirth),
-                age: formData.Age,
-                appointmentDate: formData.DateAndTime,
-                address: formData.Address,
-                hospitalName: hospitalName,
-                hospitalId: hospitalId,
-                serviceTypeId: formData.ServiceType,
-                customerId: memberId,
-                dependentCustomerId: formData.MemberDependentId,
-                doctorName: formData.DoctorName,
-                appointment: formData.Appointment,
-                labInvestigationPercentage: formData.LabPercentage,
-                pharmacyDiscountPercentage: formData.PharmacyPercentage,
-                PaidAmount: formData.PaidAmount === '' ? 0 : formData.PaidAmount,
-                TotalAmount: formData.TotalAmount === '' ? 0 : formData.TotalAmount,
-                Status: "Approved"
-            };
+            // const payload = {
+            //     name: formData.FullName,
+            //     mobileNumber: formData.MobileNumber,
+            //     cardNumber: formData.Cardnumber,
+            //     gender: formData.Gender,
+            //     dateofBirth: formateDatabaseDatetime(formData.DateofBirth),
+            //     age: formData.Age,
+            //     appointmentDate: formData.DateAndTime,
+            //     address: formData.Address,
+            //     hospitalName: hospitalName,
+            //     hospitalId: hospitalId,
+            //     serviceTypeId: formData.ServiceType,
+            //     customerId: memberId,
+            //     dependentCustomerId: formData.MemberDependentId,
+            //     doctorName: formData.DoctorName,
+            //     appointment: formData.Appointment,
+            //     labInvestigationPercentage: formData.LabPercentage,
+            //     pharmacyDiscountPercentage: formData.PharmacyPercentage,
+            //     PaidAmount: formData.PaidAmount === '' ? 0 : formData.PaidAmount,
+            //     TotalAmount: formData.TotalAmount === '' ? 0 : formData.TotalAmount,
+            //     Status: "Approved"
+            // };
 
             setSubmitLoading(true);
 
-            const responseEligible = await fetchData(`BookingConsultation/bookAppointment/add`, { ...payload });
+            // const responseEligible = await fetchData(`BookingConsultation/bookAppointment/add`, { ...payload });
 
-            if (responseEligible.status) {
+
+            const status = await fetchAllData(`lambdaAPI/Status/all`);
+            const bookedStatus = status.find(item => item.Value === "Booked");
+
+            const statusAll = await fetchAllData(`lambdaAPI/Status/all`);
+            const VisitedStatus = statusAll.find(item => item.Value === "Visited");
+
+
+
+            const getServiceTypes = await fetchData("HospitalPolicies/all", { skip: 0, take: 0 });
+
+            const HospitalPolicies = getServiceTypes.find(item => item.PoliciesType === formData.Appointment);
+
+            const updateData = [
+
+
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "ServiceTypeId",
+                    "ColumnValue": formData.ServiceType,
+                    "TableId": bookingConsultationId,
+
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "HospitalPoliciesId",
+                    "ColumnValue": HospitalPolicies.HospitalPoliciesId,
+                    "TableId": bookingConsultationId,
+
+                },
+
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "AppointmentDate",
+                    "ColumnValue": formData.DateAndTime,
+                    "TableId": bookingConsultationId,
+
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "Status",
+                    "ColumnValue": bookedStatus.StatusId,
+                    "TableId": bookingConsultationId,
+
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "DoctorName",
+                    "ColumnValue": formData.DoctorName,
+                    "TableId": bookingConsultationId,
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "Status",
+                    "ColumnValue": VisitedStatus.StatusId,
+                    "TableId": bookingConsultationId,
+
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "LabInvestigationPercentage",
+                    "ColumnValue": formData.LabPercentage,
+                    "TableId": bookingConsultationId,
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "PharmacyDiscountPercentage",
+                    "ColumnValue": formData.PharmacyPercentage,
+                    "TableId": bookingConsultationId,
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "PaidAmount",
+                    "ColumnValue": formData.PaidAmount === '' ? 0 : formData.PaidAmount,
+                    "TableId": bookingConsultationId,
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "TotalAmount",
+                    "ColumnValue": formData.TotalAmount === '' ? 0 : formData.TotalAmount,
+                    "TableId": bookingConsultationId,
+                }
+
+            ]
+
+
+            const updateResponse = await fetchUpdateData("lambdaAPI/BookingConsultation/Update", updateData);
+
+            if (updateResponse.status) {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: `${service === 'consultation' ? 'Free Consultation Booked'
                         : service === 'lab' ? 'Lab Investigation Booked' : 'Pharmacy Discount Claimed'
                         } Successfully`,
-                    details: { response: responseEligible },
+                    details: { response: updateResponse },
                 });
 
-                setFormSuccessMessage(responseEligible.message);
+                setFormSuccessMessage(updateResponse.message);
                 setEligibilityMessage('');
                 setSubmitLoading(false);
                 setIsBookingSuccess(true);
@@ -320,21 +455,21 @@ const Home = () => {
 
                     getAvailableCoupons();
                 }, 3000);
-            } else if (responseEligible.message) {
+            } else if (updateResponse.message) {
                 await logToCloudWatch(logGroupName, logStreamName, {
-                    event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
-                    payload: { ...payload },
-                    response: responseEligible,
+                    event: 'Failed to Book Consultation -lambdaAPI/BookingConsultation/Update',
+                    payload: { ...updateData },
+                    response: updateResponse,
                 });
 
-                setEligibilityMessage(responseEligible.message);
+                setEligibilityMessage(updateResponse.message);
                 setFormSuccessMessage('');
                 setSubmitLoading(false);
             } else {
                 await logToCloudWatch(logGroupName, logStreamName, {
-                    event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
-                    payload: { ...payload },
-                    response: responseEligible,
+                    event: 'Failed to Book Consultation -lambdaAPI/BookingConsultation/Update',
+                    payload: { ...updateData },
+                    response: updateResponse,
                 });
 
                 setEligibilityMessage('Sorry, Your appointment haven`t booked.');
@@ -345,6 +480,7 @@ const Home = () => {
         } else {
             setEligibilityMessage('');
             setFormSuccessMessage('');
+            setSubmitLoading(false);
         }
     };
 
@@ -384,8 +520,12 @@ const Home = () => {
 
     const getAvailableCoupons = async () => {
         const fetchAvailableCoupons = await fetchData('lambdaAPI/BookingConsultation/checkAvailableCoupons', {
+            cardNumber: formData.Cardnumber,
+            hospitalId,
             customerId: memberId
         });
+
+        setCouponCount(fetchAvailableCoupons.status ? fetchAvailableCoupons.availableCoupons : 0);
 
         if (fetchAvailableCoupons && fetchAvailableCoupons.status) {
             setAvailableCoupons(fetchAvailableCoupons.availableCoupons);
@@ -403,44 +543,181 @@ const Home = () => {
     const bookAppointment = async (data, value) => {
         getAvailableCoupons();
 
-        await fetchPreviousAppointments({
-            "skip": 0, "take": 0, "HospitalId": hospitalId,
-            "MemberDependentId": 0, "MemberId": memberDetails[0].CardPurchasedMemberId
-        })
+
+
+        let customerId = null; // To determine if it's a member or dependent
 
         if (value === 'member') {
+
+
+            await fetchPreviousAppointments({
+                "skip": 0, "take": 0, "HospitalId": hospitalId,
+                "MemberDependentId": null, "MemberId": memberId
+            });
+            customerId = memberId; // Set as the memberId
+
             setFormData((preVal) => ({
-                ...preVal, FullName: data[0].FullName, MobileNumber: data[0].MobileNumber, Cardnumber: data[0].OHOCardNumber,
-                Gender: data[0].Gender, DateofBirth: formatDate(data[0].DateofBirth), Age: calculateAge(data[0].DateofBirth),
+                ...preVal, FullName: data[0].FullName, MobileNumber: data[0].MobileNumber,
+                Cardnumber: data[0].OHOCardNumber, Gender: data[0].Gender,
+                DateofBirth: formatDate(data[0].DateofBirth), Age: calculateAge(data[0].DateofBirth),
                 Address: data[0].AddressLine1, MemberDependentId: null
-            }))
+            }));
 
-            // await fetchPreviousAppointments({
-            //     "skip": 0, "take": 0, "HospitalId": hospitalId,
-            //     "MemberDependentId": 0, "MemberId": data[0].CardPurchasedMemberId
-            // })
+            const couponResponse = await fetchData("lambdaAPI/BookingConsultation/checkIndividualCoupons", {
+                CustomerId: memberId,
+                DependentCustomerId: null,
+                hospitalId: hospitalId,
+            });
 
-            setDisplayCoupons(true);
+            setMemberCoupons((prev) => ({
+                ...prev,
+                [memberId]: couponResponse.availableCoupons,
+            }));
+
+
+            const status = await fetchAllData(`lambdaAPI/Status/all`);
+            const initiatedStatus = status.find(item => item.Value === "Initiated");
+
+            const payload = {
+                name: data[0].FullName,
+                mobileNumber: data[0].MobileNumber,
+                cardNumber: data[0].OHOCardNumber,
+                gender: data[0].Gender,
+                dateofBirth: formateDatabaseDatetime(data[0].DateofBirth),
+                age: data[0].Age,
+                address: data[0].AddressLine1,
+                hospitalName: hospitalName,
+                hospitalId: hospitalId,
+                customerId: memberId,
+                dependentCustomerId: null,
+                status: initiatedStatus.StatusId,
+            };
+
+
+
+            const responseEligible = await fetchData(`lambdaAPI/BookingConsultation/bookAppointment/add`, { ...payload });
+
+            if (responseEligible.status) {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: `${service === 'consultation' ? 'Free Consultation Booked'
+                        : service === 'lab' ? 'Lab Investigation Booked' : 'Pharmacy Discount Claimed'
+                        } Successfully`,
+                    details: { response: responseEligible },
+                });
+
+               
+            } else if (responseEligible.message) {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
+                    payload: { ...payload },
+                    response: responseEligible,
+                });
+
+              
+            } else {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
+                    payload: { ...payload },
+                    response: responseEligible,
+                });
+
+            }
+
+            setBookingConsultationId(responseEligible.data.bookingConsultationId);
+
         } else {
+
+
+            await fetchPreviousAppointments({
+                "skip": 0, "take": 0, "HospitalId": hospitalId,
+                "MemberDependentId": data.customerId, "MemberId": memberId
+            });
+            customerId = data.customerId; // Set for dependents
+
             setFormData((preVal) => ({
-                ...preVal, FullName: data.name, Gender: data.gender, DateofBirth: formatDate(data.dateofBirth),
-                Age: calculateAge(data.dateofBirth), MemberDependentId: data.memberDependentId
-            }))
+                ...preVal, FullName: data.name, Gender: data.gender,
+                DateofBirth: formatDate(data.dateofBirth), Age: calculateAge(data.dateofBirth),
+                MemberDependentId: data.customerId
+            }));
 
-            // await fetchPreviousAppointments({
-            //     "skip": 0, "take": 0, "HospitalId": hospitalId,
-            //     "MemberDependentId": 0, "MemberId": memberDetails[0].CardPurchasedMemberId
-            // })
+            const couponResponse = await fetchData("lambdaAPI/BookingConsultation/checkIndividualCoupons", {
+                CustomerId: memberId,
+                DependentCustomerId: data.customerId,
+                hospitalId: hospitalId,
+            });
 
-            setDisplayCoupons(true);
+            setDependentCoupons((prev) => ({
+                ...prev,
+                [data.customerId]: couponResponse.availableCoupons,
+            }));
+
+
+            const status = await fetchAllData(`lambdaAPI/Status/all`);
+            const initiatedStatus = status.find(item => item.Value === "Initiated");
+
+            const payload = {
+                name: data.name,
+                mobileNumber: data.MobileNumber,
+                cardNumber: formData.Cardnumber,
+                gender: data.gender,
+                dateofBirth: formateDatabaseDatetime(data.dateofBirth),
+                age: data.age,
+                address: formData.Address,
+                hospitalName: hospitalName,
+                hospitalId: hospitalId,
+                customerId: memberId,
+                dependentCustomerId: data.customerId,
+                status: initiatedStatus.StatusId,
+            };
+
+
+
+            const responseEligible = await fetchData(`lambdaAPI/BookingConsultation/bookAppointment/add`, { ...payload });
+
+            if (responseEligible.status) {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: `${service === 'consultation' ? 'Free Consultation Booked'
+                        : service === 'lab' ? 'Lab Investigation Booked' : 'Pharmacy Discount Claimed'
+                        } Successfully`,
+                    details: { response: responseEligible },
+                });
+
+               
+            } else if (responseEligible.message) {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to Book Consultation -lambdaAPI/BookingConsultation/bookAppointment/add',
+                    payload: { ...payload },
+                    response: responseEligible,
+                });
+
+              
+            } else {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Failed to Book Consultation -lambdaAPI/BookingConsultation/bookAppointment/add',
+                    payload: { ...payload },
+                    response: responseEligible,
+                });
+
+            }
+
+
+            setBookingConsultationId(responseEligible.data.bookingConsultationId);
+
+            
         }
 
-        const currDate = formateDatabaseDatetime(new Date());
+        // Store the selected member type (either 'member' or 'dependent')
+        setSelectedMemberType(value);
 
-        setFormData(preVal => ({
+        // Set appointment date
+        const currDate = formateDatabaseDatetime(new Date());
+        setFormData((preVal) => ({
             ...preVal, DateAndTime: currDate
-        }))
+        }));
+
+        setDisplayCoupons(true);
     };
+
 
     const goBackToLogin = () => {
         const isConfirmed = window.confirm("Are you sure, You want to go back for Member Verification?");
@@ -515,6 +792,23 @@ const Home = () => {
                                     </div>
                                     <p className='mt-2 m-0'><strong>Address: </strong> {memberDetails && memberDetails[0].AddressLine1}</p>
                                 </div>
+
+
+                                {/* <div className="col-md-12 mb-2" style={{ minWidth: '350px' }}>
+                                    <div className="card mt-2 p-2 border shadow-sm rounded-2 bg-light" style={{ margin: "0 auto" }}>
+                                        <h5 className="modal-title text-center mb-2" style={{ color: "rgb(0, 102, 204)" }}>Coupon Details</h5>
+
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <div className="d-flex align-items-center">
+                                                <FontAwesomeIcon icon={faTicket} className="me-2" style={{ color: "rgb(0, 102, 204)", fontSize: "1.2rem" }} />
+                                                <span>Coupon: {couponCount}</span>
+                                            </div>
+                                            <span>
+                                                Coupon Value: ₹{amount}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div> */}
 
                                 <h5 className='fw-bold'>SELECT FAMILY MEMBER</h5>
 
@@ -1070,7 +1364,7 @@ const Home = () => {
                         </div>
                     )}
 
-                    <div className='my-3 m-sm-3 d-flex flex-column align-items-center'>
+                    {/* <div className='my-3 m-sm-3 d-flex flex-column align-items-center'>
                         <h3 className='fw-bold mb-3'>Available Services</h3>
 
                         <div className="card mb-3" style={{ minWidth: '350px', maxWidth: '350px', maxHeight: '300px' }}>
@@ -1134,6 +1428,157 @@ const Home = () => {
                             </div>
                         </div>
 
+                    </div> */}
+
+
+                    <div className="container mt-4">
+                        <h5 className="text-center">Available Services</h5>
+
+                        {servicesLoading ? (
+                            <div className="text-center my-5">
+                                <div className="spinner-border text-primary" role="status">
+                                    <span className="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        ) : hospitalServices.length > 0 ? (
+                            hospitalServices.map((service, index) => (
+                                <div key={index} className="card my-3 shadow-sm">
+                                    <div className="card-body">
+                                        <h5 className="card-title">{service.PoliciesType}</h5>
+
+                                        {service.IsActive ? (
+                                            service.PoliciesType === 'Free Consultation' ? (
+                                                <>
+                                                    <div className="card-text d-flex flex-column">
+                                                        <div className="d-flex flex-column align-items-center text-center position-relative">
+                                                            <div className="position-relative" style={{ display: "inline-block" }}>
+                                                                <img
+                                                                    src="https://storingdocuments.s3.ap-south-1.amazonaws.com/coupon.jfif"
+                                                                    alt="Coupon"
+                                                                    className="img-fluid"
+                                                                    style={{ maxWidth: "250px", borderRadius: "8px" }}
+                                                                />
+
+                                                                {/* Amount Text */}
+                                                                <div
+                                                                    style={{
+                                                                        position: "absolute",
+                                                                        top: "58%",
+                                                                        left: "49%",
+                                                                        transform: "translate(-50%, -10px)",
+                                                                        fontSize: "12px",
+                                                                        color: "#0E3984",
+                                                                        fontWeight: "bold",
+                                                                        textAlign: "center",
+                                                                        width: "100%",
+                                                                    }}
+                                                                >
+                                                                    Worth of RS. {amount}/-
+                                                                </div>
+
+                                                                {/* Validity Text */}
+                                                                <div
+                                                                    style={{
+                                                                        position: "absolute",
+                                                                        bottom: "13px",
+                                                                        left: "33px",
+                                                                        width: "85%",
+                                                                        display: "flex",
+                                                                        justifyContent: "center",
+                                                                        alignItems: "center",
+                                                                    }}
+                                                                >
+                                                                    <div
+                                                                        style={{
+                                                                            padding: "5px 10px",
+                                                                            borderRadius: "5px",
+                                                                            textAlign: "center",
+                                                                            width: "100%",
+                                                                            maxWidth: "200px",
+                                                                        }}
+                                                                    >
+                                                                        <span style={{ color: "#0E3984", fontSize: "12px", fontWeight: "bold" }}>
+                                                                            Valid for only Family Members.
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+
+                                                        </div>
+
+
+
+                                                        <div className="mt-2">
+                                                            {(selectedMemberType === 'member' && memberCoupons[memberId] > 0) ||
+                                                                (selectedMemberType === 'dependent' && dependentCoupons[formData.MemberDependentId] > 0) ? (
+                                                                    <>
+                                                                    You have a maximum of 
+                                                                    <strong className="text-danger">
+                                                                        {selectedMemberType === 'member' 
+                                                                            ? memberCoupons[memberId] 
+                                                                            : dependentCoupons[formData.MemberDependentId]}
+                                                                    </strong> 
+                                                                    coupons.
+                                                                </>                                                                
+                                                            ) : (
+                                                                <span className="text-muted">You have already used all your coupons.</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+
+
+                                                    {/* Coupon Check for Member or Dependent */}
+                                                    {(selectedMemberType === 'member' && memberCoupons[memberId] > 0) ||
+                                                        (selectedMemberType === 'dependent' && dependentCoupons[formData.MemberDependentId] > 0) ? (
+                                                        <button
+                                                            className="btn btn-success d-flex align-items-center justify-content-center"
+                                                            onClick={() => openForm('consultation')}
+                                                        >
+                                                            <i className="bi bi-ticket-detailed me-2"></i>
+                                                            Avail Coupon
+                                                        </button>
+                                                    ) : (
+                                                        <a
+                                                            href="tel:7032107108" // Replace with the actual phone number
+                                                            className="btn btn-warning d-flex align-items-center justify-content-center"
+                                                        >
+                                                            <i className="bi bi-telephone me-2"></i>
+                                                            Request
+                                                        </a>
+                                                    )}
+
+
+
+
+
+
+
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <p className="card-text">
+                                                        {service.DiscountPercentage > 0
+                                                            ? `Enjoy a discount of ${service.DiscountPercentage}% on this service.`
+                                                            : `No discounts available for this service.`}
+                                                    </p>
+                                                    <div className="w-100 mt-2">
+                                                        <button className="btn btn-warning w-100" onClick={() => openForm('lab')}>
+                                                            Book Now →
+                                                        </button>
+                                                    </div>
+                                                </>
+                                            )
+                                        ) : (
+                                            <p className="text-muted">This service is currently unavailable.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-muted text-center">No services available for this hospital.</p>
+                        )}
                     </div>
 
                     {previousAppointments && previousAppointments.length > 0 && (
