@@ -623,7 +623,7 @@ const Home = () => {
 
             }
 
-            setBookingConsultationId(responseEligible.data.bookingConsultationId);
+            setBookingConsultationId(responseEligible.data.bookingConsultationId  || responseEligible.data[0].BookingConsultationId);
 
         } else {
 
@@ -701,7 +701,7 @@ const Home = () => {
             }
 
 
-            setBookingConsultationId(responseEligible.data.bookingConsultationId);
+            setBookingConsultationId(responseEligible.data.bookingConsultationId || responseEligible.data[0].BookingConsultationId);
 
             
         }
