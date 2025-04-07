@@ -24,7 +24,7 @@ const ConfirmBooking = () => {
     const [formData, setFormData] = useState({
         FullName: '', MobileNumber: '', Cardnumber: '', Gender: '', DateofBirth: '', Age: '', Address: '', Appointment: '',
         DateAndTime: '', DoctorName: '', ServiceType: null, MemberDependentId: null, LabPercentage: null, PharmacyPercentage: null,
-        PaidAmount: '', TotalAmount: ''
+        PaidAmount: '', TotalAmount: '', HospitalPoliciesId: null
     });
     const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: '' });
     const [isDataFetched, setIsDataFetched] = useState(false);
@@ -101,7 +101,7 @@ const ConfirmBooking = () => {
                     Address: getData[0].Address, Appointment: getData[0].Appointment, DateAndTime: getData[0].AppointmentDate,
                     DoctorName: getData[0].DoctorName, ServiceType: getData[0].ServiceTypeId, MemberDependentId: getData[0].MemberDependentId,
                     LabPercentage: getData[0].LabInvestigationPercentage, PharmacyPercentage: getData[0].PharmacyDiscountPercentage,
-                    PaidAmount: getData[0].PaidAmount, TotalAmount: getData[0].TotalAmount
+                    PaidAmount: getData[0].PaidAmount, TotalAmount: getData[0].TotalAmount, HospitalPoliciesId: getData[0].HospitalPoliciesId
                 })
             )
             setConsultationData(getData);
@@ -398,9 +398,9 @@ const ConfirmBooking = () => {
                     <div>
                         <Checkmark />
                         <p className='text-success text-center fs-5 p-3'>
-                            {formData.Appointment === "Free Consultation" ? (
+                            {formData.c ? (
                                 'Free Consultation Approved Successfully'
-                            ) : formData.Appointment === "Lab Investigation" ? (
+                            ) : formData.HospitalPoliciesId === 2 ? (
                                 'Lab Investigation Approved Successfully'
                             ) : 'Pharmacy Discount Approved Successfully'}
                         </p>
@@ -409,9 +409,9 @@ const ConfirmBooking = () => {
                     <div>
                         <Checkmark color="red" />
                         <p className='text-danger text-center fs-5 p-3'>
-                            {formData.Appointment === "Free Consultation" ? (
+                            {formData.HospitalPoliciesId === 1 ? (
                                 'Free Consultation Rejected Successfully'
-                            ) : formData.Appointment === "Lab Investigation" ? (
+                            ) : formData.HospitalPoliciesId === 1? (
                                 'Lab Investigation Rejected Successfully'
                             ) : 'Pharmacy Discount Rejected Successfully'}
                         </p>
@@ -442,7 +442,7 @@ const ConfirmBooking = () => {
                         )}
 
                         {consultationData && consultationData.length > 0 ? (
-                            formData.Appointment === 'Free Consultation' ? (
+                            formData.HospitalPoliciesId === 1 ? (
                                 <div className="p-3 text-start">
                                     <h4 className='mb-5 text-center'>Free Consultation for <br />
                                         <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
@@ -511,7 +511,7 @@ const ConfirmBooking = () => {
                                         </div>
                                     </form>
                                 </div>
-                            ) : formData.Appointment === 'Lab Investigation' ? (
+                            ) : formData.HospitalPoliciesId === 2 ? (
                                 <div className="p-3 text-start">
                                     <h4 className='mb-5 text-center'>Booking Lab Investigation for <br />
                                         <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
