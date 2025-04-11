@@ -254,8 +254,8 @@ const ConfirmBooking = () => {
 
             if (updateResponse) {
                 await logToCloudWatch(logGroupName, logStreamName, {
-                    event: `${formData.Appointment === 'Free Consultation' ? 'Free Consultation Approved'
-                        : formData.Appointment === 'Lab Investigation' ? 'Lab Investigation Approved' :
+                    event: `${formData.HospitalPoliciesId === 1 ? 'Free Consultation Approved'
+                        : formData.HospitalPoliciesId === 2 ? 'Lab Investigation Approved' :
                             'Pharmacy Discount Approved'} Successfully`,
                     details: { response: updateResponse },
                 });
@@ -398,7 +398,7 @@ const ConfirmBooking = () => {
                     <div>
                         <Checkmark />
                         <p className='text-success text-center fs-5 p-3'>
-                            {formData.c ? (
+                            {formData.HospitalPoliciesId ? (
                                 'Free Consultation Approved Successfully'
                             ) : formData.HospitalPoliciesId === 2 ? (
                                 'Lab Investigation Approved Successfully'
