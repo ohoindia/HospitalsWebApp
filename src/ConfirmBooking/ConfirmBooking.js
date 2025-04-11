@@ -24,7 +24,7 @@ const ConfirmBooking = () => {
     const [formData, setFormData] = useState({
         FullName: '', MobileNumber: '', Cardnumber: '', Gender: '', DateofBirth: '', Age: '', Address: '', Appointment: '',
         DateAndTime: '', DoctorName: '', ServiceType: null, MemberDependentId: null, LabPercentage: null, PharmacyPercentage: null,
-        PaidAmount: '', TotalAmount: ''
+        PaidAmount: '', TotalAmount: '', HospitalPoliciesId: null
     });
     const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: '' });
     const [isDataFetched, setIsDataFetched] = useState(false);
@@ -92,7 +92,7 @@ const ConfirmBooking = () => {
 
     const fetchDataById = async () => {
         try {
-            const getData = await fetchAllData(`BookingConsultation/GetByConsultationHashCode/${id.Id}`);
+            const getData = await fetchAllData(`lambdaAPI/BookingConsultation/GetByConsultationHashCode/${id.Id}`);
 
             getData && getData.length > 0 && (
                 setFormData({
@@ -101,10 +101,9 @@ const ConfirmBooking = () => {
                     Address: getData[0].Address, Appointment: getData[0].Appointment, DateAndTime: getData[0].AppointmentDate,
                     DoctorName: getData[0].DoctorName, ServiceType: getData[0].ServiceTypeId, MemberDependentId: getData[0].MemberDependentId,
                     LabPercentage: getData[0].LabInvestigationPercentage, PharmacyPercentage: getData[0].PharmacyDiscountPercentage,
-                    PaidAmount: getData[0].PaidAmount, TotalAmount: getData[0].TotalAmount
+                    PaidAmount: getData[0].PaidAmount, TotalAmount: getData[0].TotalAmount, HospitalPoliciesId: getData[0].HospitalPoliciesId
                 })
             )
-
             setConsultationData(getData);
             setHospitalLogo(getData[0].Image);
             setHospitalName(getData[0].HospitalName);
@@ -173,40 +172,92 @@ const ConfirmBooking = () => {
         const noError = checkErrors();
 
         if (noError) {
-            const payload = {
-                name: formData.FullName,
-                mobileNumber: formData.MobileNumber,
-                cardNumber: formData.Cardnumber,
-                gender: formData.Gender,
-                dateofBirth: formateDatabaseDatetime(formData.DateofBirth),
-                age: formData.Age,
-                appointmentDate: formData.DateAndTime,
-                address: formData.Address,
-                hospitalName: consultationData[0].HospitalName,
-                hospitalId: consultationData[0].HospitalId,
-                serviceTypeId: formData.ServiceType,
-                memberId: consultationData[0].MemberId,
-                memberDependentId: formData.MemberDependentId,
-                doctorName: formData.DoctorName,
-                appointment: formData.Appointment,
-                labInvestigationPercentage: formData.LabPercentage,
-                pharmacyDiscountPercentage: formData.PharmacyPercentage,
-                PaidAmount: formData.PaidAmount === '' ? 0 : formData.PaidAmount,
-                TotalAmount: formData.TotalAmount === '' ? 0 : formData.TotalAmount,
-                BookingConsultationId: consultationData[0].BookingConsultationId,
-                Status: "Approved"
-            };
 
-            setSubmitLoading(true);
 
-            const responseEligible = await fetchUpdateData(`BookingConsultation/update`, { ...payload });
 
-            if (responseEligible) {
+
+            const status = await fetchAllData(`lambdaAPI/Status/all`);
+            const initiatedStatus = status.find(item => item.Value === "Visited");
+
+
+            const updateData = [
+
+
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "PharmacyDiscountPercentage",
+                    "ColumnValue": formData.PharmacyPercentage,
+                    "TableId": consultationData[0].BookingConsultationId,
+
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "LabInvestigationPercentage",
+                    "ColumnValue": formData.LabPercentage,
+                    "TableId": consultationData[0].BookingConsultationId,
+
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "Status",
+                    "ColumnValue": initiatedStatus.StatusId,
+                    "TableId": consultationData[0].BookingConsultationId,
+
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "PaidAmount",
+                    "ColumnValue": formData.PaidAmount,
+                    "TableId": consultationData[0].BookingConsultationId,
+
+                },
+                {
+                    "TableName": "BookingConsultation",
+                    "ColumnName": "TotalAmount",
+                    "ColumnValue": formData.TotalAmount,
+                    "TableId": consultationData[0].BookingConsultationId,
+
+                }
+            ]
+
+
+            const updateResponse = await fetchUpdateData("lambdaAPI/BookingConsultation/Update", updateData);
+
+
+            // const payload = {
+            //     name: formData.FullName,
+            //     mobileNumber: formData.MobileNumber,
+            //     cardNumber: formData.Cardnumber,
+            //     gender: formData.Gender,
+            //     dateofBirth: formateDatabaseDatetime(formData.DateofBirth),
+            //     age: formData.Age,
+            //     appointmentDate: formData.DateAndTime,
+            //     address: formData.Address,
+            //     hospitalName: consultationData[0].HospitalName,
+            //     hospitalId: consultationData[0].HospitalId,
+            //     serviceTypeId: formData.ServiceType,
+            //     memberId: consultationData[0].MemberId,
+            //     memberDependentId: formData.MemberDependentId,
+            //     doctorName: formData.DoctorName,
+            //     appointment: formData.Appointment,
+            //     labInvestigationPercentage: formData.LabPercentage,
+            //     pharmacyDiscountPercentage: formData.PharmacyPercentage,
+            //     PaidAmount: formData.PaidAmount === '' ? 0 : formData.PaidAmount,
+            //     TotalAmount: formData.TotalAmount === '' ? 0 : formData.TotalAmount,
+            //     BookingConsultationId: consultationData[0].BookingConsultationId,
+            //     Status: "Approved"
+            // };
+
+            // setSubmitLoading(true);
+
+            // const responseEligible = await fetchUpdateData(`BookingConsultation/update`, { ...payload });
+
+            if (updateResponse) {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: `${formData.Appointment === 'Free Consultation' ? 'Free Consultation Approved'
                         : formData.Appointment === 'Lab Investigation' ? 'Lab Investigation Approved' :
                             'Pharmacy Discount Approved'} Successfully`,
-                    details: { response: responseEligible },
+                    details: { response: updateResponse },
                 });
 
                 const currentTime = new Date().getTime();
@@ -347,9 +398,9 @@ const ConfirmBooking = () => {
                     <div>
                         <Checkmark />
                         <p className='text-success text-center fs-5 p-3'>
-                            {formData.Appointment === "Free Consultation" ? (
+                            {formData.c ? (
                                 'Free Consultation Approved Successfully'
-                            ) : formData.Appointment === "Lab Investigation" ? (
+                            ) : formData.HospitalPoliciesId === 2 ? (
                                 'Lab Investigation Approved Successfully'
                             ) : 'Pharmacy Discount Approved Successfully'}
                         </p>
@@ -358,9 +409,9 @@ const ConfirmBooking = () => {
                     <div>
                         <Checkmark color="red" />
                         <p className='text-danger text-center fs-5 p-3'>
-                            {formData.Appointment === "Free Consultation" ? (
+                            {formData.HospitalPoliciesId === 1 ? (
                                 'Free Consultation Rejected Successfully'
-                            ) : formData.Appointment === "Lab Investigation" ? (
+                            ) : formData.HospitalPoliciesId === 1? (
                                 'Lab Investigation Rejected Successfully'
                             ) : 'Pharmacy Discount Rejected Successfully'}
                         </p>
@@ -391,7 +442,7 @@ const ConfirmBooking = () => {
                         )}
 
                         {consultationData && consultationData.length > 0 ? (
-                            formData.Appointment === 'Free Consultation' ? (
+                            formData.HospitalPoliciesId === 1 ? (
                                 <div className="p-3 text-start">
                                     <h4 className='mb-5 text-center'>Free Consultation for <br />
                                         <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
@@ -452,15 +503,15 @@ const ConfirmBooking = () => {
                                                     'Accept'
                                                 )}
                                             </button>
-                                            <button className="btn btn-danger" style={{ width: '80px', height: '40px' }}
+                                            {/* <button className="btn btn-danger" style={{ width: '80px', height: '40px' }}
                                                 onClick={(e) => alertFunction(e)}
                                             >
                                                 Reject
-                                            </button>
+                                            </button> */}
                                         </div>
                                     </form>
                                 </div>
-                            ) : formData.Appointment === 'Lab Investigation' ? (
+                            ) : formData.HospitalPoliciesId === 2 ? (
                                 <div className="p-3 text-start">
                                     <h4 className='mb-5 text-center'>Booking Lab Investigation for <br />
                                         <span style={{ color: '#0E94C3' }} className='fs-5 text-success'>{formData.FullName}</span>
@@ -531,11 +582,11 @@ const ConfirmBooking = () => {
                                                     'Accept'
                                                 )}
                                             </button>
-                                            <button className="btn btn-danger" style={{ width: '80px', height: '40px' }}
+                                            {/* <button className="btn btn-danger" style={{ width: '80px', height: '40px' }}
                                                 onClick={(e) => alertFunction(e)}
                                             >
                                                 Reject
-                                            </button>
+                                            </button> */}
                                         </div>
                                     </form>
                                 </div>
@@ -589,11 +640,11 @@ const ConfirmBooking = () => {
                                                     'Accept'
                                                 )}
                                             </button>
-                                            <button className="btn btn-danger" style={{ width: '80px', height: '40px' }}
+                                            {/* <button className="btn btn-danger" style={{ width: '80px', height: '40px' }}
                                                 onClick={(e) => alertFunction(e)}
                                             >
                                                 Reject
-                                            </button>
+                                            </button> */}
                                         </div>
                                     </form>
                                 </div>
