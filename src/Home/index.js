@@ -603,7 +603,7 @@ const Home = () => {
                     details: { response: responseEligible },
                 });
 
-               
+
             } else if (responseEligible.message) {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
@@ -611,7 +611,7 @@ const Home = () => {
                     response: responseEligible,
                 });
 
-              
+
             } else {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to Book Consultation -BookingConsultation/bookAppointment/add',
@@ -621,7 +621,7 @@ const Home = () => {
 
             }
 
-            setBookingConsultationId(responseEligible.data.bookingConsultationId  || responseEligible.data[0].BookingConsultationId);
+            setBookingConsultationId(responseEligible.data.bookingConsultationId || responseEligible.data[0].BookingConsultationId);
 
         } else {
 
@@ -678,7 +678,7 @@ const Home = () => {
                     details: { response: responseEligible },
                 });
 
-               
+
             } else if (responseEligible.message) {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to Book Consultation -lambdaAPI/BookingConsultation/bookAppointment/add',
@@ -686,7 +686,7 @@ const Home = () => {
                     response: responseEligible,
                 });
 
-              
+
             } else {
                 await logToCloudWatch(logGroupName, logStreamName, {
                     event: 'Failed to Book Consultation -lambdaAPI/BookingConsultation/bookAppointment/add',
@@ -699,7 +699,7 @@ const Home = () => {
 
             setBookingConsultationId(responseEligible.data.bookingConsultationId || responseEligible.data[0].BookingConsultationId);
 
-            
+
         }
 
         // Store the selected member type (either 'member' or 'dependent')
@@ -1499,33 +1499,26 @@ const Home = () => {
                                                                     </div>
                                                                 </div>
                                                             </div>
-
-
                                                         </div>
-
-
 
                                                         <div className="mt-2">
                                                             {(selectedMemberType === 'member' && memberCoupons[memberId] > 0) ||
                                                                 (selectedMemberType === 'dependent' && dependentCoupons[formData.MemberDependentId] > 0) ? (
-                                                                    <>
-                                                                    You have a maximum of 
+                                                                <>
+                                                                    You have a maximum of
                                                                     <strong className="text-danger">
-                                                                        {selectedMemberType === 'member' 
-                                                                            ? memberCoupons[memberId] 
+                                                                        {selectedMemberType === 'member'
+                                                                            ? memberCoupons[memberId]
                                                                             : dependentCoupons[formData.MemberDependentId]}
-                                                                    </strong> 
+                                                                    </strong>
                                                                     coupons.
-                                                                </>                                                                
+                                                                </>
                                                             ) : (
                                                                 <span className="text-muted">You have already used all your coupons.</span>
                                                             )}
                                                         </div>
                                                     </div>
 
-
-
-                                                    {/* Coupon Check for Member or Dependent */}
                                                     {(selectedMemberType === 'member' && memberCoupons[memberId] > 0) ||
                                                         (selectedMemberType === 'dependent' && dependentCoupons[formData.MemberDependentId] > 0) ? (
                                                         <button
@@ -1537,22 +1530,15 @@ const Home = () => {
                                                         </button>
                                                     ) : (
                                                         <a
-                                                            href="tel:7032107108" // Replace with the actual phone number
+                                                            href="tel:7032107108"
                                                             className="btn btn-warning d-flex align-items-center justify-content-center"
                                                         >
                                                             <i className="bi bi-telephone me-2"></i>
                                                             Request
                                                         </a>
                                                     )}
-
-
-
-
-
-
-
                                                 </>
-                                            ) : (
+                                            ) : service.PoliciesType === 'Lab Investigation' ? (
                                                 <>
                                                     <p className="card-text">
                                                         {service.DiscountPercentage > 0
@@ -1565,10 +1551,25 @@ const Home = () => {
                                                         </button>
                                                     </div>
                                                 </>
+                                            ) : (
+                                                // Default for other services
+                                                <>
+                                                    <p className="card-text">
+                                                        {service.DiscountPercentage > 0
+                                                            ? `Enjoy a discount of ${service.DiscountPercentage}% on this service.`
+                                                            : `No discounts available for this service.`}
+                                                    </p>
+                                                    <div className="w-100 mt-2">
+                                                        <button className="btn btn-warning w-100" onClick={() => openForm('other')}>
+                                                            Book Now →
+                                                        </button>
+                                                    </div>
+                                                </>
                                             )
                                         ) : (
                                             <p className="text-muted">This service is currently unavailable.</p>
                                         )}
+
                                     </div>
                                 </div>
                             ))
