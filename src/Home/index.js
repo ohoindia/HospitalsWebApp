@@ -426,8 +426,8 @@ const Home = () => {
 
             if (updateResponse.status) {
                 await logToCloudWatch(logGroupName, logStreamName, {
-                    event: `${service === 1 ? 'Free Consultation Booked'
-                        : service === 2 ? 'Lab Investigation Booked' : 'Pharmacy Discount Claimed'
+                    event: `${service === "consultation" ? 'Free Consultation Booked'
+                        : service === "lab" ? 'Lab Investigation Booked' : 'Pharmacy Discount Claimed'
                         } Successfully`,
                     details: { response: updateResponse },
                 });
