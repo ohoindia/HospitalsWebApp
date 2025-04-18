@@ -67,6 +67,7 @@ const Home = () => {
     const [showInvoiceForm, setShowInvoiceForm] = useState(false);
     const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
     const [invoiceMap, setInvoiceMap] = useState({});
+    const [invoiceUrl, setInvoiceUrl] = useState('');
 
 
 
@@ -208,6 +209,12 @@ const Home = () => {
 
             const profileUrl = response && response.find(value => value.ConfigKey === 'couponAmount');
             setAmount(profileUrl.ConfigValue);
+
+            const invoiceURL = response && response.find(value => value.ConfigKey === 'ConsultationInvoiceBucketURL');
+            if (invoiceURL) {
+                setInvoiceUrl(invoiceURL.ConfigValue);
+            }
+
 
 
         } catch (e) {
@@ -748,37 +755,13 @@ const Home = () => {
         }
     };
 
-
-
-    const invoice = {
-        hospitalName: 'ABC Multispecialty Hospital',
-        hospitalAddress: '123 Health Street, Hyderabad, Telangana - 500001',
-        hospitalPhone: '+91-99999 99999',
-        hospitalEmail: 'contact@abchospital.com',
-        customerName: 'John Doe',
-        customerId: 'CUST12345',
-        dependentCustomerId: 'DEP67890',
-        bookingConsultationId: 'BOOK98765',
-        consultationInvoiceId: 'INV20250415',
-        createdDate: '2025-04-15',
-        consultationFee: 250,
-        labInvestigationFee: 150,
-        pharmacyFee: 100,
-        otherCharges: 50,
-        discountPercentage: 10,
-        totalAmount: 495, // calculated below
-        paidAmount: 495,
-        fileUrl: '/invoices/consultation_invoice.pdf'
+    const handleDownload = (policyUrl) => {
+        if (policyUrl) {
+            const url = `${invoiceUrl}${policyUrl}`;
+            // Create an anchor element and simulate a click to download the file
+            window.open(url, '_blank');
+        }
     };
-
-    const handleDownload = (fileUrl) => {
-        // Creating a temporary link to simulate a download
-        const link = document.createElement('a');
-        link.href = fileUrl;
-        link.download = fileUrl.split('/').pop(); // Extract file name from the URL
-        link.click(); // Trigger download
-    };
-
 
     const calculateTotalAmount = () => {
         const {
@@ -816,14 +799,11 @@ const Home = () => {
         }
     };
 
-
-
-
     const handleInvoiceSubmit = async () => {
         setIsSubmittingInvoice(true); // Start loading
         const total = calculateTotalAmount();
 
-       
+
 
         const invoiceData = {
             ...invoiceForm,
@@ -831,11 +811,11 @@ const Home = () => {
             totalAmount: total
         };
 
-        console.log("Invoice Submitted:", invoiceData);
+       
 
         try {
             const add = await fetchData("lambdaAPI/ConsultationInvoice/add", invoiceData);
-            console.log("add", add);
+            
         } catch (error) {
             console.error("Invoice submission failed:", error);
         }
@@ -1745,12 +1725,12 @@ const Home = () => {
 
 
 
-                                        <button
+                                        {/* <button
                                             onClick={() => handleDownload(app.FileUrl)}
                                             className="btn btn-outline-info btn-sm"
                                         >
                                             <i className="bi bi-download me-1"></i> Download
-                                        </button>
+                                        </button> */}
                                     </div>
 
                                 </div>
@@ -1759,7 +1739,7 @@ const Home = () => {
                     )}
 
 
-                    {selectedInvoice ? (
+                    {selectedInvoice && (
                         <div className="container mb-5 px-3 px-md-5">
                             <div className="card p-4" style={{ borderRadius: '16px', backgroundColor: '#fdfdfd' }}>
                                 {/* Hospital Name & Date */}
@@ -1836,7 +1816,7 @@ const Home = () => {
                                 {/* Download Button */}
                                 <div className="text-end mb-3">
                                     <button
-                                        onClick={() => handleDownload(selectedInvoice.fileUrl)}
+                                        onClick={() => handleDownload(selectedInvoice.InvoiceFileName)}
                                         className="btn btn-outline-primary"
                                     >
                                         <i className="bi bi-download me-2"></i>Download Invoice
@@ -1851,10 +1831,6 @@ const Home = () => {
                                     </p>
                                 </div>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="text-center my-5">
-                            <p className="text-muted fs-5">No invoice found for this appointment.</p>
                         </div>
                     )}
 
