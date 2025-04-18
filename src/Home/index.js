@@ -87,7 +87,6 @@ const Home = () => {
         pharmacyFee: '',
         otherCharges: '',
         discountPercentage: '',
-        paidAmount: '',
     });
 
 
@@ -823,13 +822,8 @@ const Home = () => {
     const handleInvoiceSubmit = async () => {
         setIsSubmittingInvoice(true); // Start loading
         const total = calculateTotalAmount();
-        const paid = parseFloat(invoiceForm.paidAmount || 0);
 
-        if (paid > total) {
-            alert("Paid amount cannot be more than the total amount.");
-            setIsSubmittingInvoice(false);
-            return;
-        }
+       
 
         const invoiceData = {
             ...invoiceForm,
@@ -1881,7 +1875,6 @@ const Home = () => {
                                         { label: 'Pharmacy Fee', name: 'pharmacyFee' },
                                         { label: 'Other Charges', name: 'otherCharges' },
                                         { label: 'Discount (%)', name: 'discountPercentage' },
-                                        { label: 'Paid Amount', name: 'paidAmount' }
                                     ].map(field => (
                                         <div className="col-12 mb-3" key={field.name}>
                                             <label className="form-label fw-medium">{field.label}</label>
