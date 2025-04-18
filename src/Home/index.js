@@ -63,6 +63,14 @@ const Home = () => {
     const [dependentCoupons, setDependentCoupons] = useState({});
     const [selectedMemberType, setSelectedMemberType] = useState();
     const [bookingConsultationId, setBookingConsultationId] = useState(null);
+    const [selectedInvoice, setSelectedInvoice] = useState(null);
+    const [showInvoiceForm, setShowInvoiceForm] = useState(false);
+    const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
+    const [invoiceMap, setInvoiceMap] = useState({});
+
+
+
+
 
     const getLogStreamName = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -70,11 +78,26 @@ const Home = () => {
     };
 
 
+    const [invoiceForm, setInvoiceForm] = useState({
+        bookingConsultationId: '',
+        customerId: '',
+        dependentCustomerId: '',
+        consultationFee: '',
+        labInvestigationFee: '',
+        pharmacyFee: '',
+        otherCharges: '',
+        discountPercentage: '',
+        paidAmount: '',
+    });
+
+
 
     const logGroupName = process.env.REACT_APP_LOGGER;
     const logStreamName = getLogStreamName();
 
     // const memberId = 25587;
+
+
 
     useEffect(() => {
         if (!configValues.length > 0) {
@@ -725,6 +748,111 @@ const Home = () => {
             });
         }
     };
+
+
+
+    const invoice = {
+        hospitalName: 'ABC Multispecialty Hospital',
+        hospitalAddress: '123 Health Street, Hyderabad, Telangana - 500001',
+        hospitalPhone: '+91-99999 99999',
+        hospitalEmail: 'contact@abchospital.com',
+        customerName: 'John Doe',
+        customerId: 'CUST12345',
+        dependentCustomerId: 'DEP67890',
+        bookingConsultationId: 'BOOK98765',
+        consultationInvoiceId: 'INV20250415',
+        createdDate: '2025-04-15',
+        consultationFee: 250,
+        labInvestigationFee: 150,
+        pharmacyFee: 100,
+        otherCharges: 50,
+        discountPercentage: 10,
+        totalAmount: 495, // calculated below
+        paidAmount: 495,
+        fileUrl: '/invoices/consultation_invoice.pdf'
+    };
+
+    const handleDownload = (fileUrl) => {
+        // Creating a temporary link to simulate a download
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileUrl.split('/').pop(); // Extract file name from the URL
+        link.click(); // Trigger download
+    };
+
+
+    const calculateTotalAmount = () => {
+        const {
+            consultationFee = 0,
+            labInvestigationFee = 0,
+            pharmacyFee = 0,
+            otherCharges = 0,
+            discountPercentage = 0
+        } = invoiceForm;
+
+        const total =
+            +consultationFee +
+            +labInvestigationFee +
+            +pharmacyFee +
+            +otherCharges;
+
+        return Math.round(total - (total * (+discountPercentage / 100)));
+    };
+
+
+    const fetchInvoiceByConsultationId = async (bookingConsultationId) => {
+        try {
+            const response = await fetchAllData(`lambdaAPI/ConsultationInvoice/GetInvoiceByBookingConsultationId/${bookingConsultationId}`);
+
+            if (response?.length > 0) {
+                setInvoiceMap(prev => ({ ...prev, [bookingConsultationId]: true }));
+                setSelectedInvoice(response[0]);
+            } else {
+                setInvoiceMap(prev => ({ ...prev, [bookingConsultationId]: false }));
+                setSelectedInvoice(null);
+            }
+        } catch (error) {
+            console.error('Error fetching invoice:', error);
+            alert('Failed to load invoice. Please try again later.');
+        }
+    };
+
+
+
+
+    const handleInvoiceSubmit = async () => {
+        setIsSubmittingInvoice(true); // Start loading
+        const total = calculateTotalAmount();
+        const paid = parseFloat(invoiceForm.paidAmount || 0);
+
+        if (paid > total) {
+            alert("Paid amount cannot be more than the total amount.");
+            setIsSubmittingInvoice(false);
+            return;
+        }
+
+        const invoiceData = {
+            ...invoiceForm,
+            createdDate: new Date().toISOString(),
+            totalAmount: total
+        };
+
+        console.log("Invoice Submitted:", invoiceData);
+
+        try {
+            const add = await fetchData("lambdaAPI/ConsultationInvoice/add", invoiceData);
+            console.log("add", add);
+        } catch (error) {
+            console.error("Invoice submission failed:", error);
+        }
+
+        setShowInvoiceForm(false);
+        setFormData({});
+        setIsSubmittingInvoice(false); // Stop loading
+    };
+
+
+
 
     const openForm = (service) => {
         setIsformOpen(true);
@@ -1580,15 +1708,263 @@ const Home = () => {
 
                     {previousAppointments && previousAppointments.length > 0 && (
                         <div className='d-flex flex-column my-3 mb-4'>
-                            <h5 className='w-semibold mb-2'>Previous Appointments</h5>
+                            <h5 className='fw-semibold mb-2'>Previous Appointments</h5>
                             {previousAppointments.map(app => (
-                                <div className='d-flex flex-row justify-content-between align-items-center mb-1' key={app.AppointmentDate}>
-                                    <span className='me-5'>{app.Name}</span>
-                                    <span>{formatDate(app.AppointmentDate)}</span>
+                                <div className='d-flex flex-column shadow-sm p-3 mb-3' style={{ backgroundColor: '#f8f9fa', borderRadius: '12px' }} key={app.AppointmentDate}>
+                                    <div className='d-flex justify-content-between align-items-center mb-2'>
+                                        <span className='fw-bold'>{app.Name}</span>
+                                        <span>{formatDate(app.AppointmentDate)}</span>
+                                    </div>
+
+                                    {/* Buttons for each appointment */}
+                                    <div className="d-flex justify-content-start gap-3 mt-3">
+                                        <button
+                                            onClick={() => fetchInvoiceByConsultationId(app.BookingConsultationId)}
+                                            className="btn btn-outline-primary btn-sm"
+                                        >
+                                            <i className="bi bi-eye me-1"></i> View
+                                        </button>
+
+
+                                        {!invoiceMap[app.BookingConsultationId] && (
+                                            <button
+                                                onClick={() => {
+                                                    setShowInvoiceForm(true);
+                                                    setInvoiceForm({
+                                                        bookingConsultationId: app.BookingConsultationId,
+                                                        customerId: app.CustomerId,
+                                                        dependentCustomerId: app.DependentCustomerId,
+                                                        consultationFee: '',
+                                                        labInvestigationFee: '',
+                                                        pharmacyFee: '',
+                                                        otherCharges: '',
+                                                        discountPercentage: '',
+                                                        paidAmount: '',
+                                                    });
+                                                }}
+                                                className="btn btn-outline-success btn-sm"
+                                            >
+                                                <i className="bi bi-file-earmark-earphones me-1"></i> Generate
+                                            </button>
+                                        )}
+
+
+
+
+                                        <button
+                                            onClick={() => handleDownload(app.FileUrl)}
+                                            className="btn btn-outline-info btn-sm"
+                                        >
+                                            <i className="bi bi-download me-1"></i> Download
+                                        </button>
+                                    </div>
+
                                 </div>
                             ))}
                         </div>
                     )}
+
+
+                    {selectedInvoice ? (
+                        <div className="container mb-5 px-3 px-md-5">
+                            <div className="card p-4" style={{ borderRadius: '16px', backgroundColor: '#fdfdfd' }}>
+                                {/* Hospital Name & Date */}
+                                <div className="text-center mb-4 border-bottom pb-3">
+                                    <h2 className="fw-bold text-primary mb-1">{hospitalName}</h2>
+                                    <p className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
+                                        Invoice Date: {formatDate(selectedInvoice.CreatedDate)}
+                                    </p>
+                                </div>
+
+                                {/* Service Summary */}
+                                <h6 className="fw-bold border-bottom pb-2 mb-3">Service Summary</h6>
+                                <div className="table-responsive">
+                                    <table className="table table-bordered mb-4">
+                                        <thead className="table-light">
+                                            <tr>
+                                                <th className="w-75">Description</th>
+                                                <th className="text-end">Amount (INR)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {selectedInvoice.ConsultationFee && (
+                                                <tr>
+                                                    <td>Consultation Fee</td>
+                                                    <td className="text-end">₹{selectedInvoice.ConsultationFee}</td>
+                                                </tr>
+                                            )}
+                                            {selectedInvoice.LabInvestigationFee && (
+                                                <tr>
+                                                    <td>Lab Investigation Fee</td>
+                                                    <td className="text-end">₹{selectedInvoice.LabInvestigationFee}</td>
+                                                </tr>
+                                            )}
+                                            {selectedInvoice.PharmacyFee && (
+                                                <tr>
+                                                    <td>Pharmacy Fee</td>
+                                                    <td className="text-end">₹{selectedInvoice.PharmacyFee}</td>
+                                                </tr>
+                                            )}
+                                            {selectedInvoice.OtherCharges && (
+                                                <tr>
+                                                    <td>Other Charges</td>
+                                                    <td className="text-end">₹{selectedInvoice.OtherCharges}</td>
+                                                </tr>
+                                            )}
+                                            {selectedInvoice.DiscountPercentage && (
+                                                <tr>
+                                                    <td>Discount</td>
+                                                    <td className="text-end text-danger">- {selectedInvoice.DiscountPercentage}%</td>
+                                                </tr>
+                                            )}
+                                            <tr className="fw-bold bg-light">
+                                                <td>Total</td>
+                                                <td className="text-end">₹{selectedInvoice.TotalAmount}</td>
+                                            </tr>
+                                            {selectedInvoice.PaidAmount && (
+                                                <tr className="fw-semibold">
+                                                    <td>Paid Amount</td>
+                                                    <td className="text-end text-success">₹{selectedInvoice.PaidAmount}</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Note */}
+                                <div className="mb-4">
+                                    <p className="fst-italic small text-muted mb-0">
+                                        This invoice is generated for the consultation and related services provided to the patient.
+                                        Please retain this invoice for your records.
+                                    </p>
+                                </div>
+
+                                {/* Download Button */}
+                                <div className="text-end mb-3">
+                                    <button
+                                        onClick={() => handleDownload(selectedInvoice.fileUrl)}
+                                        className="btn btn-outline-primary"
+                                    >
+                                        <i className="bi bi-download me-2"></i>Download Invoice
+                                    </button>
+                                </div>
+
+                                {/* Footer */}
+                                <hr className="mb-3" />
+                                <div className="text-center">
+                                    <p className="text-muted small mb-0">
+                                        Thank you for choosing <strong>{hospitalName}</strong>. Wishing you a speedy recovery!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center my-5">
+                            <p className="text-muted fs-5">No invoice found for this appointment.</p>
+                        </div>
+                    )}
+
+
+
+
+
+
+                    {showInvoiceForm && (
+                        <div className="d-flex justify-content-center my-4">
+                            <div className="card shadow-sm p-4 w-100" style={{ maxWidth: '600px', borderRadius: '16px', backgroundColor: '#fefefe' }}>
+                                <h4 className="mb-4 fw-bold text-primary">Generate Invoice</h4>
+
+                                <div className="row">
+                                    {[
+                                        { label: 'Consultation Fee', name: 'consultationFee' },
+                                        { label: 'Lab Investigation Fee', name: 'labInvestigationFee' },
+                                        { label: 'Pharmacy Fee', name: 'pharmacyFee' },
+                                        { label: 'Other Charges', name: 'otherCharges' },
+                                        { label: 'Discount (%)', name: 'discountPercentage' },
+                                        { label: 'Paid Amount', name: 'paidAmount' }
+                                    ].map(field => (
+                                        <div className="col-12 mb-3" key={field.name}>
+                                            <label className="form-label fw-medium">{field.label}</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                className="form-control"
+                                                placeholder={`Enter ${field.label.toLowerCase()}`}
+                                                value={invoiceForm[field.name] || ''}
+                                                onChange={(e) =>
+                                                    setInvoiceForm({ ...invoiceForm, [field.name]: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Total Calculation */}
+                                <div className="bg-light rounded p-3 mt-3 mb-2">
+                                    <h6 className="mb-0 fw-bold text-dark d-flex justify-content-between">
+                                        <span>Total Amount</span>
+                                        <span>
+                                            ₹
+                                            {(() => {
+                                                const {
+                                                    consultationFee = 0,
+                                                    labInvestigationFee = 0,
+                                                    pharmacyFee = 0,
+                                                    otherCharges = 0,
+                                                    discountPercentage = 0,
+                                                } = invoiceForm;
+
+                                                const total =
+                                                    (parseFloat(consultationFee) || 0) +
+                                                    (parseFloat(labInvestigationFee) || 0) +
+                                                    (parseFloat(pharmacyFee) || 0) +
+                                                    (parseFloat(otherCharges) || 0);
+
+                                                const discount = total * ((parseFloat(discountPercentage) || 0) / 100);
+
+                                                return (total - discount).toFixed(2);
+                                            })()}
+                                        </span>
+                                    </h6>
+                                </div>
+
+                                {/* Buttons */}
+                                <div className="d-flex justify-content-end gap-2 mt-4">
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={() => setShowInvoiceForm(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="btn btn-success"
+                                        onClick={handleInvoiceSubmit}
+                                        disabled={isSubmittingInvoice}
+                                    >
+                                        {isSubmittingInvoice ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                Submitting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="bi bi-file-earmark-plus me-1"></i> Submit Invoice
+                                            </>
+                                        )}
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+
+
+
+
+
+
+
 
                     <div className="d-flex flex-column align-items-center mb-2 mt-auto">
                         {logo ? (
