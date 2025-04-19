@@ -8,7 +8,6 @@ import 'flatpickr/dist/flatpickr.min.css';
 import { useNavigate } from 'react-router-dom';
 import '../Login/input.css';
 import { format } from 'date-fns';
-import { formatDate } from '../CommonFunctions/CommonFunctions';
 import { useSelector, useDispatch } from 'react-redux';
 import { setConfigValue, setHospitalImage } from '../ReduxFunctions/ReduxSlice';
 import { logToCloudWatch } from '../Helpers/cloudwatchLogger';
@@ -68,6 +67,8 @@ const Home = () => {
     const [isSubmittingInvoice, setIsSubmittingInvoice] = useState(false);
     const [invoiceMap, setInvoiceMap] = useState({});
     const [invoiceUrl, setInvoiceUrl] = useState('');
+    const [customerName, setCustomerName] = useState('');
+    const [customerCardNumber, setCustomerCardNumber] = useState('');
 
 
 
@@ -88,6 +89,7 @@ const Home = () => {
         pharmacyFee: '',
         otherCharges: '',
         discountPercentage: '',
+        paidAmount: null,
     });
 
 
@@ -97,6 +99,20 @@ const Home = () => {
 
     // const memberId = 25587;
 
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const options = {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+        };
+        return date.toLocaleString('en-IN', options);
+    };
+    
 
 
     useEffect(() => {
@@ -782,8 +798,12 @@ const Home = () => {
     };
 
 
-    const fetchInvoiceByConsultationId = async (bookingConsultationId) => {
+    const fetchInvoiceByConsultationId = async (app) => {
         try {
+
+            setCustomerName(app.Name);
+            setCustomerCardNumber(app.CardNumber);
+            const bookingConsultationId = app.BookingConsultationId || app.BookingConsultationId;
             const response = await fetchAllData(`lambdaAPI/ConsultationInvoice/GetInvoiceByBookingConsultationId/${bookingConsultationId}`);
 
             if (response?.length > 0) {
@@ -811,11 +831,33 @@ const Home = () => {
             totalAmount: total
         };
 
-       
+
 
         try {
             const add = await fetchData("lambdaAPI/ConsultationInvoice/add", invoiceData);
-            
+
+            if (add) {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Invoice Submission Successful',
+                    details: { response: add },
+                });
+                alert('Invoice submitted successfully!');
+
+                const invoiceFileAdd = await fetchData("lambdaAPI/ConsultationInvoice/HospitalInvoice", {
+                    bookingConsultationId: add.bookingConsultationId,
+                });
+
+                console.log("invoiceFileAdd", invoiceFileAdd);
+
+
+            } else {
+                await logToCloudWatch(logGroupName, logStreamName, {
+                    event: 'Invoice Submission Failed',
+                    details: { response: add },
+                });
+                alert('Failed to submit invoice. Please try again later.');
+            }
+
         } catch (error) {
             console.error("Invoice submission failed:", error);
         }
@@ -1693,7 +1735,7 @@ const Home = () => {
                                     {/* Buttons for each appointment */}
                                     <div className="d-flex justify-content-start gap-3 mt-3">
                                         <button
-                                            onClick={() => fetchInvoiceByConsultationId(app.BookingConsultationId)}
+                                            onClick={() => fetchInvoiceByConsultationId(app)}
                                             className="btn btn-outline-primary btn-sm"
                                         >
                                             <i className="bi bi-eye me-1"></i> View
@@ -1713,7 +1755,7 @@ const Home = () => {
                                                         pharmacyFee: '',
                                                         otherCharges: '',
                                                         discountPercentage: '',
-                                                        paidAmount: '',
+                                                        paidAmount: null,
                                                     });
                                                 }}
                                                 className="btn btn-outline-success btn-sm"
@@ -1750,8 +1792,19 @@ const Home = () => {
                                     </p>
                                 </div>
 
+                                <div className="mb-4">
+                                    <h6 className="fw-bold border-bottom pb-2 mb-3">Patient Details</h6>
+                                    <div className="mb-2">
+                                        <strong>Name:</strong> {customerName}
+                                    </div>
+                                    <div className="mb-2">
+                                        <strong>Card Number:</strong> {customerCardNumber}
+                                    </div>
+                                </div>
+
+
                                 {/* Service Summary */}
-                                <h6 className="fw-bold border-bottom pb-2 mb-3">Service Summary</h6>
+                                <h6 className="fw-bold border-bottom pb-2 mb-3">Consultation Charges</h6>
                                 <div className="table-responsive">
                                     <table className="table table-bordered mb-4">
                                         <thead className="table-light">
@@ -1833,6 +1886,7 @@ const Home = () => {
                             </div>
                         </div>
                     )}
+
 
 
 
