@@ -13,8 +13,8 @@ const changeUrlPath = (path) => {
 
 const getAuthHeaders = () => ({
   "Content-Type": "application/json",
-  "Access-Control-Allow-Origin": "*",
-  "Authorization": `Bearer ${localStorage.getItem("token")}`
+  "Access-Control-Allow-Origin": "*"
+  //"Authorization": `Bearer ${localStorage.getItem("token")}`
 });
 
 const fetchData = async (urlPath, axiosBody) => {
@@ -22,7 +22,7 @@ const fetchData = async (urlPath, axiosBody) => {
     const response = await axios({
       method: "POST",
       url: changeUrlPath(urlPath),
-      headers: getAuthHeaders(),
+      Headers: getAuthHeaders(),
       data: axiosBody
     });
     return response.data;
@@ -37,7 +37,7 @@ const fetchAllData = async (urlPath) => {
     const response = await axios({
       method: "GET",
       url: changeUrlPath(urlPath),
-      headers: getAuthHeaders()
+      Headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -51,7 +51,7 @@ const fetchUpdateData = async (urlPath, axiosBody) => {
     const response = await axios({
       method: "PUT",
       url: changeUrlPath(urlPath),
-      headers: getAuthHeaders(),
+      Headers: getAuthHeaders(),
       data: axiosBody
     });
     return response.data;
@@ -66,7 +66,7 @@ const fetchDeleteData = async (urlPath, axiosBody) => {
     const response = await axios({
       method: "DELETE",
       url: changeUrlPath(urlPath),
-      headers: getAuthHeaders(),
+      Headers: getAuthHeaders(),
       data: axiosBody
     });
     return response.data;
@@ -81,7 +81,7 @@ const uploadImage = async (urlPath, formData) => {
     const response = await axios({
       method: "POST",
       url: changeUrlPath(urlPath),
-      headers: {
+      Headers: {
         "Content-Type": "multipart/form-data",
         "Access-Control-Allow-Origin": "*"
         // "Authorization": `Bearer ${localStorage.getItem("token")}`
@@ -116,7 +116,7 @@ const uploadPdf = async (urlPath, formData) => {
     const response = await axios({
       method: "POST",
       url: changeUrlPath(urlPath),
-      headers: {
+      Headers: {
         "Access-Control-Allow-Origin": "*"
         // "Authorization": `Bearer ${localStorage.getItem("token")}`
       },
