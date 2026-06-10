@@ -179,6 +179,10 @@ const Login = () => {
             });
 
             if (otpResponse) {
+
+                localStorage.setItem('token', otpResponse.jwtToken);
+
+
                 if (otpResponse.status) {
                     await logToCloudWatch(logGroupName, logStreamName, {
                         event: 'OTP Sent Successfully',
@@ -226,6 +230,9 @@ const Login = () => {
             });
 
             if (otpResponse) {
+
+                localStorage.setItem('token', otpResponse.jwtToken);
+                
                 if (otpResponse.status) {
                     await logToCloudWatch(logGroupName, logStreamName, {
                         event: 'OTP Sent Successfully',
