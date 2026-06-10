@@ -26,7 +26,7 @@ const Home = () => {
         DateAndTime: '', DoctorName: '', ServiceType: null, MemberDependentId: null, LabPercentage: null, PharmacyPercentage: null,
         PaidAmount: '', TotalAmount: ''
     });
-    const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: '' });
+    const [formErrors, setFormErrors] = useState({ DateAndTime: '', ServiceType: '', DoctorName: '' });
     const [eligibilityMessage, setEligibilityMessage] = useState();
     const [formSuccessMessage, setFormSuccessMessage] = useState();
     const [isValid, setIsValid] = useState(false);
@@ -273,6 +273,13 @@ const Home = () => {
                 ...preVal, [e.target.name]: e.target.value
             }))
 
+        } else if (e.target.name === 'DoctorName') {
+            setFormErrors(preVal => ({
+                ...preVal, DoctorName: ''
+            }));
+            setFormData(preVal => ({
+                ...preVal, [e.target.name]: e.target.value
+            }));
         } else if (e.target.name === 'ServiceType') {
             setFormData(preVal => ({
                 ...preVal, [e.target.name]: parseInt(e.target.value)
@@ -338,6 +345,10 @@ const Home = () => {
             setFormErrors(preVal => ({
                 ...preVal, DateAndTime: 'Please select appointment date & time *'
             }))
+        } else if (!formData.DoctorName || formData.DoctorName.trim() === '') {
+            setFormErrors(preVal => ({
+                ...preVal, DoctorName: 'Please enter doctor name *'
+            }));
         } else if (service === 'consultation' && !formData.ServiceType) {
 
             setFormErrors(preVal => ({
@@ -1243,15 +1254,26 @@ const Home = () => {
                                         {formErrors && formErrors.DateAndTime.length > 0 && <p className='text-danger m-0'>{formErrors.DateAndTime}</p>}
                                     </div>
 
-                                    <div className="d-flex flex-column mb-3">
-                                        <label className="form-control-label">Doctor Name</label>
-                                        <input type="text" name="DoctorName" className="form-control" placeholder="Enter Doctor Name"
-                                            value={formData.DoctorName} onChange={(e) => onChangeHandler(e)} />
-                                    </div>
+                                        <div className="d-flex flex-column mb-3">
+                                            <label className="form-control-label">
+                                                Doctor Name<span className="text-danger"> *</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="DoctorName"
+                                                className="form-control"
+                                                placeholder="Enter Doctor Name"
+                                                value={formData.DoctorName}
+                                                onChange={(e) => onChangeHandler(e)}
+                                            />
+                                            {formErrors && formErrors.DoctorName && formErrors.DoctorName.length > 0 &&
+                                                <p className='text-danger m-0'>{formErrors.DoctorName}</p>
+                                            }
+                                        </div>
 
                                     <div className="d-flex flex-column mb-3">
                                         <label className="form-control-label">
-                                            Servive Type<span className="text-danger"> *</span>
+                                            Service Type<span className="text-danger"> *</span>
                                         </label>
                                         <select name="ServiceType" className="form-control" placeholder="Ex: Orthopedic"
                                             value={formData.ServiceType} onChange={(e) => onChangeHandler(e)}>

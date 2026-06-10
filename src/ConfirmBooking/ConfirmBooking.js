@@ -480,7 +480,7 @@ const ConfirmBooking = () => {
 
                                             <div className="d-flex flex-column mb-3">
                                                 <label className="form-control-label">
-                                                    Servive Type<span className="text-danger"> *</span>
+                                                    Service Type<span className="text-danger"> *</span>
                                                 </label>
                                                 <select name="ServiceType" className="form-control" placeholder="Ex: Orthopedic"
                                                     value={formData.ServiceType} onChange={(e) => onChangeHandler(e)}>
