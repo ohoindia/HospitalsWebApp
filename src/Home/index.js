@@ -345,7 +345,7 @@ const Home = () => {
             setFormErrors(preVal => ({
                 ...preVal, DateAndTime: 'Please select appointment date & time *'
             }))
-        } else if (!formData.DoctorName || formData.DoctorName.trim() === '') {
+        } else if (service === 'consultation' && (!formData.DoctorName || formData.DoctorName.trim() === '')) {
             setFormErrors(preVal => ({
                 ...preVal, DoctorName: 'Please enter doctor name *'
             }));
